@@ -82,19 +82,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground;C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)\..\..\Build\Windows\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground;C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)\..\..\Build\Windows\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground;C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)\..\..\Build\Windows\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground;C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\cppfs\source\cppfs\include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)\..\..\Build\Windows\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
