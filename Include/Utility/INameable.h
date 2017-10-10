@@ -8,6 +8,7 @@ MIST_NAMESPACE
 
 class INameable {
 public:
+	virtual ~INameable() = default;
 	virtual const std::string& GetName() const = 0;
 };
 

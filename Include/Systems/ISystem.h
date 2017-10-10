@@ -7,11 +7,10 @@
 
 MIST_NAMESPACE
 
-class ISystem : public INameable {
+class ISystem {
 
 public:
-	// -INameable API-
-	virtual const std::string& GetName() const override = 0;
+	virtual ~ISystem() = default;
 
 };
 

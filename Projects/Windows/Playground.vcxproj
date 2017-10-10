@@ -19,6 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Include\Systems\ISystem.h" />
+    <ClInclude Include="..\..\Include\Systems\SystemCollection.h" />
+    <ClInclude Include="..\..\Include\Systems\SystemProvider.h" />
+    <ClInclude Include="..\..\Include\Utility\INameable.h" />
     <ClInclude Include="..\..\Mist_common\include\ConfigMacros.h" />
     <ClInclude Include="..\..\Mist_common\include\UtilityMacros.h" />
     <ClInclude Include="..\..\Mist_plugin-loader\include\Plugin.h" />

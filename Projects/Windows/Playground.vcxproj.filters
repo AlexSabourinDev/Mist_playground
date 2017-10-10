@@ -19,6 +19,12 @@
     <Filter Include="Header Files\Mist_Common">
       <UniqueIdentifier>{5542af4b-f795-40f2-8519-ff207295674c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Systems">
+      <UniqueIdentifier>{8ee0ccd3-9067-40d4-a09b-7ea9d09b254c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utility">
+      <UniqueIdentifier>{a0bf80ca-98a0-4a3e-a5eb-949af3d7c9ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Mist_common\include\ConfigMacros.h">
@@ -32,6 +38,18 @@
     </ClInclude>
     <ClInclude Include="..\..\Mist_plugin-loader\include\PluginPlatform.h">
       <Filter>Header Files\Mist_plugin-loader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Include\Systems\ISystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Include\Utility\INameable.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Include\Systems\SystemProvider.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Include\Systems\SystemCollection.h">
+      <Filter>Header Files\Systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
