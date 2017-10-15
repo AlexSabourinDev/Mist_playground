@@ -7,7 +7,6 @@ set( MIST_INCLUDE_DIRS
 	 ${CMAKE_SOURCE_DIR}/Core
 	 ${CMAKE_SOURCE_DIR}/Modules
 	 ${CMAKE_SOURCE_DIR}/3rdParty )
-include_directories( ${MIST_INCLUDE_DIRS} )
 	 
 set( MIST_OUTPUT_DIRECTORY 
 	 ${CMAKE_BINARY_DIR}/../../Output )
