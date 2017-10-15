@@ -1,0 +1,1 @@
+call Gen.bat "Visual Studio 15 2017" VS2017
