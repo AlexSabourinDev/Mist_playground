@@ -1,14 +1,14 @@
 macro ( SetOutputDirectory directory )
-	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${directory}/lib")
-	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${directory}/lib")
-	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${directory}/bin")
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${directory}/../Lib")
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${directory}/../Lib")
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${directory}")
 	
 	# Assure that we don't get the configuration postfix to the build path
 	foreach( cfg ${CMAKE_CONFIGURATION_TYPES} )
 		string( TOUPPER ${cfg} OUTPUTCONFIG )
-		set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${directory}/${cfg}/lib" )
-		set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${directory}/${cfg}/lib" )
-		set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${directory}/${cfg}/bin" )
+		set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${directory}/${cfg}" )
+		set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${directory}/../Lib" )
+		set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${directory}/../Lib" )
 	endforeach()
 	
 endmacro ( SetOutputDirectory )
@@ -51,4 +51,10 @@ function( AddLibrary targetName linkage sourceFiles )
 	set_target_properties( ${targetName} PROPERTIES LINKER_LANGUAGE CXX )
 	target_include_directories( ${targetName} PUBLIC ${MIST_INCLUDE_DIRS} )
 endfunction( AddLibrary )
+
+function( AddExecutable targetName sourceFiles )
+	add_executable( ${targetName} ${sourceFiles} )
+	set_target_properties( ${targetName} PROPERTIES LINKER_LANGUAGE CXX )
+	target_include_directories( ${targetName} PUBLIC ${MIST_INCLUDE_DIRS} )
+endfunction( AddExecutable )
 

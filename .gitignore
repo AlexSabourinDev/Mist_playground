@@ -8,3 +8,5 @@ Projects/Debug/
 Build/
 
 Output/
+/CMake/CMakeFiles
+.vs/

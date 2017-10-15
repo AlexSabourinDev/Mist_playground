@@ -1,0 +1,10 @@
+﻿  Copying axis.bmp
+          1 file(s) copied.
+  Copying button.bmp
+          1 file(s) copied.
+  Copying controllermap.bmp
+          1 file(s) copied.
+  controllermap.c
+     Creating library C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\3rdParty\SDL2-2.0.6\VisualC\Win32\Debug\controllermap.lib and object C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\3rdParty\SDL2-2.0.6\VisualC\Win32\Debug\controllermap.exp
+  controllermap.vcxproj -> C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\3rdParty\SDL2-2.0.6\VisualC\Win32\Debug\controllermap.exe
+  controllermap.vcxproj -> C:\Users\Alexandre\Desktop\Development\Utility\Mist_playground\3rdParty\SDL2-2.0.6\VisualC\Win32\Debug\controllermap.pdb (Full PDB)

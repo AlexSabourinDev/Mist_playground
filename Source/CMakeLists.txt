@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.3.2 )
+cmake_minimum_required( VERSION 3.7.0 )
 
 include (../CMake/Utilities.CMake)
 
@@ -13,8 +13,17 @@ set( MIST_OUTPUT_DIRECTORY
 message( "Setting Mist Output Directory to ${MIST_OUTPUT_DIRECTORY}" )
 SetOutputDirectory( ${MIST_OUTPUT_DIRECTORY} )
 
+# Include SDL2
+
+set( SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../3rdParty/SDL2-2.0.6 )
+find_package(SDL2 REQUIRED)
+include (../CMake/3rdParty.CMake)
+
+# Create the projects
+
 project( All )
 
-add_subdirectory( Modules )
-add_subdirectory( Core )
 add_subdirectory( 3rdParty )
+add_subdirectory( Core )
+add_subdirectory( Modules )
+add_subdirectory( Game )
