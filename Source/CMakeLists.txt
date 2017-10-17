@@ -13,6 +13,9 @@ set( MIST_OUTPUT_DIRECTORY
 message( "Setting Mist Output Directory to ${MIST_OUTPUT_DIRECTORY}" )
 SetOutputDirectory( ${MIST_OUTPUT_DIRECTORY} )
 
+set( MIST_DATA_OUTPUT 
+	${CMAKE_BINARY_DIR}/../../Data )
+
 # Include SDL2
 
 set( SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../3rdParty/SDL2-2.0.6 )
