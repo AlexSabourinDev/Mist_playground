@@ -27,21 +27,21 @@ endfunction( ListSubdirectories )
 
 
 function( ListFiles currentDir result )
-	file(GLOB fileList ${currentDir}
-		"*.hpp"
-		"*.cpp"
-		"*.h"
-		"*.c")
+	file(GLOB fileList
+		"${currentDir}/*.hpp"
+		"${currentDir}/*.cpp"
+		"${currentDir}/*.h"
+		"${currentDir}/*.c")
 	set( ${result} ${fileList} PARENT_SCOPE )
 endfunction( ListFiles )
 
 
 function( ListFilesRecursive currentDir result )
-	file(GLOB_RECURSE fileList ${currentDir}
-		"*.hpp"
-		"*.cpp"
-		"*.h"
-		"*.c")
+	file(GLOB_RECURSE fileList
+		"${currentDir}/*.hpp"
+		"${currentDir}/*.cpp"
+		"${currentDir}/*.h"
+		"${currentDir}/*.c")
 	set( ${result} ${fileList} PARENT_SCOPE)
 endfunction( ListFilesRecursive )
 
@@ -52,15 +52,16 @@ function( AddLibrary targetName linkage sourceFiles )
 	target_include_directories( ${targetName} PUBLIC ${MIST_INCLUDE_DIRS} )
 endfunction( AddLibrary )
 
+
 function( AddExecutable targetName sourceFiles )
 	add_executable( ${targetName} ${sourceFiles} )
 	set_target_properties( ${targetName} PROPERTIES LINKER_LANGUAGE CXX )
 	target_include_directories( ${targetName} PUBLIC ${MIST_INCLUDE_DIRS} )
 endfunction( AddExecutable )
 
+
 function( CopyDataToOutput targetName)
 	set( COPY_SOURCE ${CMAKE_SOURCE_DIR}/../Data )
 	set( DEST_SOURCE $<TARGET_FILE_DIR:${targetName}> )
 	add_custom_command( TARGET ${targetName} PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${COPY_SOURCE}" "${DEST_SOURCE}" )
 endfunction( CopyDataToOutput )
-
