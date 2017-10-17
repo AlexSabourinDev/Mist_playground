@@ -2,7 +2,7 @@
 
 #include <Mist_Common\include\UtilityMacros.h>
 
-#include <Platform/PlatformAPIh.h>
+#include <Platform/PlatformAPI.h>
 
 MIST_NAMESPACE
 
