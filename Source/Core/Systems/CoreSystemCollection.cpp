@@ -1,7 +1,6 @@
 
 #include <Mist_Common\include\UtilityMacros.h>
 
-#include <Systems/PCoreSystemCollection.h>
 #include <Systems/CoreSystemCollection.h>
 
 MIST_NAMESPACE

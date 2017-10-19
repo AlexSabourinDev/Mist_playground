@@ -7,7 +7,9 @@
 
 MIST_NAMESPACE
 
-struct CoreSystemCollection;
+struct CoreSystemCollection {
+	System m_Systems[(int)CoreSystemType::Max];
+};
 
 // -API-
 // Add a system to the system collection
