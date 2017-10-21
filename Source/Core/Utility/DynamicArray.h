@@ -10,7 +10,6 @@ MIST_NAMESPACE
 // -Config-
 static const size_t DYNAMIC_ARRAY_GROWTH_SIZE = 5;
 
-
 // -Data-
 template< typename ElementType >
 struct DynamicArray {
@@ -18,7 +17,6 @@ struct DynamicArray {
 	size_t m_Size = 0;
 	size_t m_Capacity = 0;
 };
-
 
 // -API-
 template< typename ElementType >
@@ -65,6 +63,7 @@ void PushBack(DynamicArray<ElementType>* target, ElementType element)
 		Reserve(target, target->m_Size + DYNAMIC_ARRAY_GROWTH_SIZE);
 	}
 
+	// Cast to && is equivalent of std::move (No standard lib!) (Just for fun x) )
 	target->m_Data[target->m_Size] = element;
 	target->m_Size++;
 }

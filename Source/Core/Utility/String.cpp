@@ -44,6 +44,11 @@ __declspec(dllexport) void Set(String* string, const char* data)
 
 __declspec(dllexport) void Clear(String* string)
 {
+	if (string->m_StringBuffer == nullptr)
+	{
+		return;
+	}
+
 #if MIST_DEBUG
 	memset(string->m_StringBuffer, 0, strlen(string->m_StringBuffer));
 #endif

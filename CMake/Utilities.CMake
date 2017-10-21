@@ -71,7 +71,7 @@ endfunction( AddLibrary )
 function( AddExecutable targetName sourceFiles )
 	add_executable( ${targetName} ${sourceFiles} )
 	set_target_properties( ${targetName} PROPERTIES LINKER_LANGUAGE CXX )
-	target_compile_definitions( ${targetName} PRIVATE _CRT_SECURE_NO_WARNINGS )
+	target_compile_definitions( ${targetName} PRIVATE _CRT_SECURE_NO_WARNINGS _CRTDBG_MAP_ALLOC )
 	target_include_directories( ${targetName} PUBLIC ${MIST_INCLUDE_DIRS} )
 endfunction( AddExecutable )
 

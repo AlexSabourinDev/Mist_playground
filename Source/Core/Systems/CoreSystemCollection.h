@@ -8,7 +8,8 @@
 MIST_NAMESPACE
 
 struct CoreSystemCollection {
-	System m_Systems[(int)CoreSystemType::Max];
+	System m_Systems[(size_t)CoreSystemType::Max];
+	size_t m_Size = (size_t)CoreSystemType::Max;
 };
 
 // -API-
