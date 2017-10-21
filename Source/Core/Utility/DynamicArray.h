@@ -85,6 +85,7 @@ void Clear(DynamicArray<ElementType>* target)
 	free(target->m_Data);
 	target->m_Size = 0;
 	target->m_Capacity = 0;
+	target->m_Data = nullptr;
 }
 
 MIST_NAMESPACE_END

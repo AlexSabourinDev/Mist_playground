@@ -8,6 +8,13 @@
 
 MIST_NAMESPACE
 
+__declspec(dllexport) String Create(const char* data)
+{
+	String str;
+	Set(&str, data);
+	return str;
+}
+
 __declspec(dllexport) void Append(String* string, const char* appendage)
 {
 	// Create a new buffer of this string's size + the other string's size
@@ -133,6 +140,11 @@ __declspec(dllexport) void Reserve(String* string, size_t size)
 		string->m_StringBuffer = result;
 		string->m_Capacity = size;
 	}
+}
+
+__declspec(dllexport) const char* ToCStr(String* string)
+{
+	return string->m_StringBuffer != nullptr ? string->m_StringBuffer : "";
 }
 
 MIST_NAMESPACE_END

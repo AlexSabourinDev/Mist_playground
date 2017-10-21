@@ -12,6 +12,8 @@ struct String
 };
 
 // -API-
+__declspec(dllexport) String Create(const char* data);
+
 __declspec(dllexport) void Append(String* string, const char* appendage);
 __declspec(dllexport) void Append(String* left, String* right);
 
@@ -31,6 +33,8 @@ __declspec(dllexport) bool Contains(String* target, const String* findTarget);
 __declspec(dllexport) bool Contains(String* target, const char* findTarget);
 
 __declspec(dllexport) void Reserve(String* string, size_t size);
+
+__declspec(dllexport) const char* ToCStr(String* string);
 
 
 MIST_NAMESPACE_END
