@@ -47,6 +47,7 @@ void Reserve(DynamicArray<ElementType>* target, size_t size)
 
 	if (result == nullptr)
 	{
+		// Realloc failed to reallocate the block of memory
 		MIST_ASSERT(false);
 	}
 	else

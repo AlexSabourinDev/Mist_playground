@@ -3,8 +3,11 @@
 #include <Systems\CoreSystemCollection.h>
 
 #include <Utility/DynamicArray.h>
+#include <Utility/String.h>
 
 #include <Mist_plugin-loader\include\Plugin.h>
+
+#include <cstdio>
 
 using namespace MIST_NAMESPACE_NAME;
 
@@ -29,7 +32,6 @@ int main(int argc, char *argv[])
 
 	DynamicArray<Plugin::Handle> plugins;
 	Reserve(&plugins, (size_t)CoreSystemType::Max);
-
 
 
 	UnloadPlugins(&plugins);
