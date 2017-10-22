@@ -72,6 +72,11 @@ __declspec(dllexport) bool Equal(const String* left, const char* right)
 	return left->m_StringBuffer != nullptr && strcmp(left->m_StringBuffer, right) == 0;
 }
 
+__declspec(dllexport) bool Equal(const char* left, const char* right)
+{
+	return strcmp(left, right) == 0;
+}
+
 __declspec(dllexport) void Replace(String* string, const String* target, const String* replaceValue)
 {
 	Replace(string, target->m_StringBuffer, replaceValue->m_StringBuffer);

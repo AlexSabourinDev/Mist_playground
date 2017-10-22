@@ -6,6 +6,7 @@
 #include <Mist_Common\include\UtilityMacros.h>
 
 #include <Systems\CoreSystemCollection.h>
+#include <Systems\System.h>
 
 #include <Utility/DynamicArray.h>
 #include <Utility/String.h>
@@ -21,9 +22,8 @@
 
 using namespace MIST_NAMESPACE_NAME;
 
-using PluginInitialize = void(*)();
-using PluginLoadSystems = void*(*)();
-using PluginReleaseSystemsArray = void(*)(void* systems);
+using PluginInitialize = SystemArray(*)(int, char**);
+using PluginReleaseSystemsArray = void(*)(SystemArray systems);
 using PluginDeinitialize = void(*)();
 
 DynamicArray<Plugin::Handle> LoadPlugins(DynamicArray<String>* pluginNames)
@@ -86,13 +86,10 @@ DynamicArray<String> LoadPluginConfig(const char* executableDir)
 	return pluginNames;
 }
 
-void LoadSystems(CoreSystemCollection* coreSystems, Plugin::Handle plugin)
+void LoadSystems(CoreSystemCollection* coreSystems, Plugin::Handle plugin, int argc, char** argv)
 {
-	PluginInitialize pluginInitialization = Plugin::GetAPI<void>(plugin, "Initialize");
-	pluginInitialization();
-
-	PluginLoadSystems loadSystems = Plugin::GetAPI<void*>(plugin, "LoadCoreSystems");
-	DynamicArray<Pair<System, CoreSystemType>>* pluginSystems = (DynamicArray<Pair<System, CoreSystemType>>*)loadSystems();
+	PluginInitialize pluginInitialization = Plugin::GetAPI<SystemArray, int, char**>(plugin, "Initialize");
+	DynamicArray<Pair<System, CoreSystemType>>* pluginSystems = (DynamicArray<Pair<System, CoreSystemType>>*)pluginInitialization(argc, argv);
 
 	for (size_t system = 0; system < pluginSystems->m_Size; system++)
 	{
@@ -112,20 +109,36 @@ int main(int argc, char *argv[])
 
 	for (size_t i = 0; i < plugins.m_Size; i++)
 	{
-		LoadSystems(&systemCollection, plugins.m_Data[i]);
+		LoadSystems(&systemCollection, plugins.m_Data[i], argc, argv);
 	}
 
 	for (size_t i = 0; i < systemCollection.m_Size; i++)
 	{
-		//systemCollection.m_Systems[i].m_Initialize(&systemCollection.m_Systems[i]);
+		if (IsValid(&systemCollection.m_Systems[i]))
+		{
+			systemCollection.m_Systems[i].m_Initialize(&systemCollection.m_Systems[i]);
+		}
 	}
 
 
+	while (true) // TODO: not infinite loop
+	{
+		for (size_t i = 0; i < systemCollection.m_Size; i++)
+		{
+			if (IsValid(&systemCollection.m_Systems[i]))
+			{
+				systemCollection.m_Systems[i].m_SystemTick(&systemCollection.m_Systems[i]);
+			}
+		}
+	}
 
 
 	for (size_t i = 0; i < systemCollection.m_Size; i++)
 	{
-		//systemCollection.m_Systems[i].m_Deinitialize(&systemCollection.m_Systems[i]);
+		if (IsValid(&systemCollection.m_Systems[i]))
+		{
+			systemCollection.m_Systems[i].m_Deinitialize(&systemCollection.m_Systems[i]);
+		}
 	}
 
 	UnloadPlugins(&plugins);

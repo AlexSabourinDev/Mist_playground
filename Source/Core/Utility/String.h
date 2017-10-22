@@ -25,6 +25,7 @@ __declspec(dllexport) bool IsEmpty(const String* string);
 
 __declspec(dllexport) bool Equal(const String* left, const String* right);
 __declspec(dllexport) bool Equal(const String* left, const char* right);
+__declspec(dllexport) bool Equal(const char* left, const char* right);
 
 __declspec(dllexport) void Replace(String* string, const String* target, const String* replaceValue);
 __declspec(dllexport) void Replace(String* string, const char* target, const char* replaceValue);
