@@ -10,6 +10,7 @@ enum class SystemEventType
 {
 	Startup,
 	Tick,
+	ClearScreen,
 	Shutdown,
 	Max
 };

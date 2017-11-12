@@ -28,6 +28,11 @@ using PluginInitialize = SystemArray(*)(int, char**);
 using PluginReleaseSystemsArray = void(*)(SystemArray systems);
 using PluginDeinitialize = void(*)();
 
+void Print(const char* string)
+{
+	printf("Engine Log: %s\n", string);
+}
+
 DynamicArray<Plugin::Handle> LoadPlugins(DynamicArray<String>* pluginNames)
 {
 	DynamicArray<Plugin::Handle> loadedPlugins;
@@ -106,16 +111,21 @@ int main(int argc, char *argv[])
 {
 	CoreSystemCollection systemCollection;
 
+	Print("Loading plugin configuration");
 	DynamicArray<String> pluginIDs = LoadPluginConfig(argv[0]);
+
+	Print("Loading all plugins");
 	DynamicArray<Plugin::Handle> plugins = LoadPlugins(&pluginIDs);
 
 	SystemEventHandlers systemEvents;
 
+	Print("Loading all systems from the plugins");
 	for (size_t i = 0; i < plugins.m_Size; i++)
 	{
 		LoadSystems(&systemCollection, plugins.m_Data[i], argc, argv);
 	}
 
+	Print("Initializing systems");
 	for (size_t i = 0; i < systemCollection.m_Size; i++)
 	{
 		if (IsValid(&systemCollection.m_Systems[i]))
@@ -132,6 +142,8 @@ int main(int argc, char *argv[])
 	RegisterHandler(&systemEvents, SystemEventType::Shutdown,
 		[](System* system, SystemEventType, SystemEventData)
 		{
+			Print("Shutting down engine");
+
 			bool* lifetimeFlag = (bool*)system->m_Data;
 			*lifetimeFlag = false;
 			return SystemEventResult::Ok;
@@ -143,6 +155,7 @@ int main(int argc, char *argv[])
 	}
 
 
+	Print("Deinitializing systems");
 	for (size_t i = 0; i < systemCollection.m_Size; i++)
 	{
 		if (IsValid(&systemCollection.m_Systems[i]))
@@ -151,6 +164,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	Print("Unloading systems");
 	UnloadPlugins(&plugins);
 
 	for (size_t i = 0; i < pluginIDs.m_Size; i++)

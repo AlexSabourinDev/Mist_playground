@@ -17,6 +17,7 @@
 MIST_NAMESPACE
 
 SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEventData);
+SystemEventResult ClearScreen(System* system, SystemEventType, SystemEventData);
 
 struct PlatformSystem
 {
@@ -91,6 +92,7 @@ void InitializePlatformSystem(System* system, SystemEventHandlers* eventSystem)
 	platformSystem->m_EventSystem = eventSystem;
 
 	RegisterHandler(eventSystem, SystemEventType::Tick, TickPlatformSystem, system);
+	RegisterHandler(eventSystem, SystemEventType::ClearScreen, ClearScreen, system);
 
 	if (SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -112,6 +114,8 @@ void DeinitializePlatformSystem(System* system)
 	free(system->m_Data);
 }
 
+// Event handlers
+
 SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEventData)
 {
 	PlatformSystem* platform = (PlatformSystem*)system->m_Data;
@@ -130,6 +134,15 @@ SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEven
 	
 	return SystemEventResult::Ok;
 }
+
+SystemEventResult ClearScreen(System* system, SystemEventType, SystemEventData)
+{
+	PlatformSystem* platform = (PlatformSystem*)system->m_Data;
+	SDL_GL_SwapWindow(platform->m_Window);
+
+	return SystemEventResult::Ok;
+}
+
 
 System CreatePlatformSystem(WindowConfig config)
 {

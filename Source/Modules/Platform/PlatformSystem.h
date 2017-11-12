@@ -24,8 +24,6 @@ struct WindowConfig
 	WindowFlags m_WindowFlags;
 };
 
-struct PlatformSystem;
-
 System CreatePlatformSystem(WindowConfig config);
 void Deserialize(cJSON* jsonObject, WindowConfig* config);
 

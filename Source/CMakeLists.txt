@@ -6,7 +6,7 @@ set( MIST_INCLUDE_DIRS
 	 ${CMAKE_SOURCE_DIR}
 	 ${CMAKE_SOURCE_DIR}/Core
 	 ${CMAKE_SOURCE_DIR}/Modules
-	 ${CMAKE_SOURCE_DIR}/3rdParty )
+	 ${CMAKE_SOURCE_DIR}/3rdParty)
 	 
 set( MIST_OUTPUT_DIRECTORY 
 	 ${CMAKE_BINARY_DIR}/../../Output )
@@ -19,6 +19,7 @@ set( MIST_DATA_OUTPUT
 # Include SDL2
 
 set( SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../3rdParty/SDL2-2.0.6 )
+
 find_package(SDL2 REQUIRED)
 include (../CMake/3rdParty.CMake)
 

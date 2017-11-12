@@ -16,8 +16,6 @@ extern "C"
 	PLATFORM_API SystemArray Initialize(int argc, char *argv[]);
 	PLATFORM_API void ReleaseSystemArray(SystemArray systems);
 	PLATFORM_API void Deinitialize();
-
-	struct Platform;
 }
 
 MIST_NAMESPACE_END

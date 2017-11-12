@@ -1,5 +1,6 @@
 {
   "Plugins": [
-    "Plugins/Platform"
+    "Plugins/Platform",
+	"Plugins/Rendering"
   ]
 }

@@ -7,6 +7,7 @@ MIST_NAMESPACE
 enum class CoreSystemType {
 	Unknown = 1,
 	Platform = 2,
+	Rendering = 3,
 	Max
 };
 
