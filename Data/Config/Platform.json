@@ -6,8 +6,8 @@
     "Rect": {
       "x": 100,
       "y": 100,
-      "width": 640,
-      "height": 480
+      "width": 1024,
+      "height": 740
     },
     "Name": "Mist Playground",
     "Flags": [

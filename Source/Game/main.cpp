@@ -8,6 +8,8 @@
 #include <Systems\CoreSystemCollection.h>
 #include <Systems\System.h>
 
+#include <Core/Utility/SystemEventHandler.h>
+
 #include <Utility/DynamicArray.h>
 #include <Utility/String.h>
 #include <Utility/FileIO.h>
@@ -107,6 +109,8 @@ int main(int argc, char *argv[])
 	DynamicArray<String> pluginIDs = LoadPluginConfig(argv[0]);
 	DynamicArray<Plugin::Handle> plugins = LoadPlugins(&pluginIDs);
 
+	SystemEventHandlers systemEvents;
+
 	for (size_t i = 0; i < plugins.m_Size; i++)
 	{
 		LoadSystems(&systemCollection, plugins.m_Data[i], argc, argv);
@@ -116,20 +120,26 @@ int main(int argc, char *argv[])
 	{
 		if (IsValid(&systemCollection.m_Systems[i]))
 		{
-			systemCollection.m_Systems[i].m_Initialize(&systemCollection.m_Systems[i]);
+			systemCollection.m_Systems[i].m_Initialize(&systemCollection.m_Systems[i], &systemEvents);
 		}
 	}
 
+	// Assure that the engine is shutdown when receiving a shutdown event
+	bool lifetimeFlag = true;
+	System lifetimeSystem;
+	lifetimeSystem.m_Data = &lifetimeFlag;
 
-	while (true) // TODO: not infinite loop
-	{
-		for (size_t i = 0; i < systemCollection.m_Size; i++)
+	RegisterHandler(&systemEvents, SystemEventType::Shutdown,
+		[](System* system, SystemEventType, SystemEventData)
 		{
-			if (IsValid(&systemCollection.m_Systems[i]))
-			{
-				systemCollection.m_Systems[i].m_SystemTick(&systemCollection.m_Systems[i]);
-			}
-		}
+			bool* lifetimeFlag = (bool*)system->m_Data;
+			*lifetimeFlag = false;
+			return SystemEventResult::Ok;
+		}, &lifetimeSystem);
+
+	while (lifetimeFlag)
+	{
+		DispatchEvent(&systemEvents, SystemEventType::Tick);
 	}
 
 

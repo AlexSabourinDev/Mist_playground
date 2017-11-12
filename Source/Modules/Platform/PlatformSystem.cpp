@@ -5,6 +5,8 @@
 #include <Utility/BitManipulations.h>
 #include <Utility/String.h>
 
+#include <Core/Utility/SystemEventHandler.h>
+
 #include <Math\Serialization.h>
 
 #include <SDL.h>
@@ -13,6 +15,15 @@
 #include <cstdio>
 
 MIST_NAMESPACE
+
+SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEventData);
+
+struct PlatformSystem
+{
+	WindowConfig m_Config;
+	SystemEventHandlers* m_EventSystem;
+	SDL_Window* m_Window;
+};
 
 void FreeConfig(WindowConfig* config)
 {
@@ -57,12 +68,29 @@ Uint32 ConvertWindowFlags(WindowFlags flags)
 		sdlFlags |= SDL_WINDOW_FULLSCREEN;
 	}
 
-	return sdlFlags;
+	return sdlFlags | SDL_WINDOW_OPENGL;
 }
 
-void InitializePlatformSystem(System* system)
+void InitializeOpenGL(SDL_Window* window)
+{
+	int result = 0;
+	// Add the results, if the results are negative the final result will be negative. The success will still be 0
+	result += SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	result += SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	result += SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	result += SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+	SDL_GL_CreateContext(window);
+
+	MIST_ASSERT(result == 0);
+}
+
+void InitializePlatformSystem(System* system, SystemEventHandlers* eventSystem)
 {
 	PlatformSystem* platformSystem = (PlatformSystem*)system->m_Data;
+	platformSystem->m_EventSystem = eventSystem;
+
+	RegisterHandler(eventSystem, SystemEventType::Tick, TickPlatformSystem, system);
 
 	if (SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -72,6 +100,7 @@ void InitializePlatformSystem(System* system)
 		MIST_ASSERT(window != nullptr);
 
 		platformSystem->m_Window = window;
+		InitializeOpenGL(window);
 	}
 }
 
@@ -83,13 +112,23 @@ void DeinitializePlatformSystem(System* system)
 	free(system->m_Data);
 }
 
-void TickPlatformSystem(System* system)
+SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEventData)
 {
+	PlatformSystem* platform = (PlatformSystem*)system->m_Data;
+
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) 
 	{
-
+		switch (event.type)
+		{
+		case SDL_QUIT:
+			DispatchEvent(platform->m_EventSystem, SystemEventType::Shutdown);
+			break;
+		}
 	}
+
+	
+	return SystemEventResult::Ok;
 }
 
 System CreatePlatformSystem(WindowConfig config)
@@ -101,7 +140,6 @@ System CreatePlatformSystem(WindowConfig config)
 
 	platformSystem.m_Data = platform;
 	platformSystem.m_Initialize = &InitializePlatformSystem;
-	platformSystem.m_SystemTick = &TickPlatformSystem;
 	platformSystem.m_Deinitialize = &DeinitializePlatformSystem;
 
 	return platformSystem;

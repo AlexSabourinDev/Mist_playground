@@ -9,8 +9,6 @@
 
 #include <cstdint>
 
-using Window = struct SDL_Window;
-
 MIST_NAMESPACE
 
 enum class WindowFlags : uint32_t
@@ -26,11 +24,7 @@ struct WindowConfig
 	WindowFlags m_WindowFlags;
 };
 
-struct PlatformSystem
-{
-	WindowConfig m_Config;
-	Window* m_Window;
-};
+struct PlatformSystem;
 
 System CreatePlatformSystem(WindowConfig config);
 void Deserialize(cJSON* jsonObject, WindowConfig* config);
