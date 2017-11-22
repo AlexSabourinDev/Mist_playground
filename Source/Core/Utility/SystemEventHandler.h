@@ -11,6 +11,7 @@ enum class SystemEventType
 	Startup,
 	Tick,
 	ClearScreen,
+	ShutdownRequest,
 	Shutdown,
 	Max
 };
@@ -27,14 +28,14 @@ using SystemEventData = void*;
 
 struct SystemEventHandler
 {
-	using Call = SystemEventResult(*)(System* system, SystemEventType eventType, SystemEventData eventData);
+	using Call = SystemEventResult(*)(void* data, SystemEventType eventType, SystemEventData eventData);
 
 	static constexpr size_t MAX_SYSTEM_EVENT_HANDLERS = 10;
 
 	struct Handler
 	{
 		Call m_Call;
-		System* m_System;
+		void* m_Data;
 	};
 
 	Handler m_RegisteredHandlers[MAX_SYSTEM_EVENT_HANDLERS];
@@ -42,13 +43,13 @@ struct SystemEventHandler
 };
 
 
-struct SystemEventHandlers
+struct SystemEventDispatch
 {
 	SystemEventHandler m_Handlers[(size_t)SystemEventType::Max];
 	static constexpr size_t m_Size = (size_t)SystemEventType::Max;
 };
 
-__declspec(dllexport) void RegisterHandler(SystemEventHandlers* eventHandlers, SystemEventType eventType, SystemEventHandler::Call handler, System* handlerSystem);
-__declspec(dllexport) void DispatchEvent(SystemEventHandlers* eventHandlers, SystemEventType eventType, SystemEventData eventData = nullptr);
+void RegisterHandler(SystemEventDispatch* eventHandlers, SystemEventType eventType, SystemEventHandler::Call handler, void* data);
+void DispatchEvent(SystemEventDispatch* eventHandlers, SystemEventType eventType, SystemEventData eventData = nullptr);
 
 MIST_NAMESPACE_END

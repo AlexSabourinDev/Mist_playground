@@ -1,0 +1,3 @@
+[submodule "Source/3rdParty/Mist_Common"]
+	path = Source/3rdParty/Mist_Common
+	url = https://github.com/AlexSabourinDev/Mist_common.git

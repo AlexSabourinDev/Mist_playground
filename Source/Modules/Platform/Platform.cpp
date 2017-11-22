@@ -7,8 +7,6 @@
 #include <Systems/System.h>
 #include <Utility/String.h>
 #include <Utility/FileIO.h>
-#include <Utility/DynamicArray.h>
-#include <Utility\Pair.h>
 
 #include <SDL.h>
 
@@ -67,39 +65,35 @@ Uint32 LoadSubsystemFlags(cJSON* config)
 
 
 
-PLATFORM_API SystemArray Initialize(int argc, char *argv[])
+SystemData InitializePlatform(SystemAllocator allocator, int argc, char *argv[])
 {
+	// Unused param
+	(void)argc;
+
 	cJSON* config = LoadConfig(argv[0]);
 
 	if (SDL_Init(LoadSubsystemFlags(config)) != 0) {
 		MIST_ASSERT(false);
 	}
 
-	DynamicArray<Pair<System, CoreSystemType>>* systems = (DynamicArray<Pair<System, CoreSystemType>>*)malloc(sizeof(DynamicArray<Pair<System, CoreSystemType>>));
-	memset(systems, 0, sizeof(DynamicArray<Pair<System, CoreSystemType>>));
-
 	cJSON* windowConfigResource = cJSON_GetObjectItem(config, "WindowConfig");
 	WindowConfig windowConfig;
 	Deserialize(windowConfigResource, &windowConfig);
 
-	PushBack(systems, Create(CreatePlatformSystem(windowConfig), CoreSystemType::Platform));
-
 	cJSON_Delete(config);
-	return systems;
+
+	return CreatePlatformSystem(allocator, windowConfig);
 }
 
-
-PLATFORM_API void ReleaseSystemArray(SystemArray data)
+void DeinitializePlatform(SystemDeallocator deallocator, SystemData data)
 {
-	DynamicArray<Pair<System, CoreSystemType>>* systems = (DynamicArray<Pair<System, CoreSystemType>>*)data;
-
-	Clear(systems);
-	free(systems);
-}
-
-PLATFORM_API void Deinitialize()
-{
+	DestroyPlatformSystem(deallocator, (PlatformSystem*)data);
 	SDL_Quit();
+}
+
+void ProvidePlatformDependencies(SystemData data, SystemEventDispatch* eventHandlers)
+{
+	ProvideEventSystem((PlatformSystem*)data, eventHandlers);
 }
 
 MIST_NAMESPACE_END

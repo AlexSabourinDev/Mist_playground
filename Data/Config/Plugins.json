@@ -1,6 +1,0 @@
-{
-  "Plugins": [
-    "Plugins/Platform",
-	"Plugins/Rendering"
-  ]
-}

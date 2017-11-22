@@ -13,12 +13,12 @@ MIST_NAMESPACE
 
 struct RenderingSystem
 {
-	SystemEventHandlers* m_EventSystem;
+	SystemEventDispatch* m_EventSystem;
 };
 
-SystemEventResult TickRenderer(System* system, SystemEventType, SystemData)
+SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 {
-	RenderingSystem* renderingSystem = (RenderingSystem*)system->m_Data;
+	RenderingSystem* renderingSystem = (RenderingSystem*)system;
 
 	glClearColor(0.8f, 0.6f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -27,11 +27,10 @@ SystemEventResult TickRenderer(System* system, SystemEventType, SystemData)
 	return SystemEventResult::Ok;
 }
 
-void InitializeRenderer(System* system, SystemEventHandlers* eventSystem)
+void ProvideEventDispatchToRenderer(RenderingSystem* renderingSystem, SystemEventDispatch* eventSystem)
 {
-	RegisterHandler(eventSystem, SystemEventType::Tick, TickRenderer, system);
+	RegisterHandler(eventSystem, SystemEventType::Tick, TickRenderer, renderingSystem);
 
-	RenderingSystem* renderingSystem = (RenderingSystem*)system->m_Data;
 	renderingSystem->m_EventSystem = eventSystem;
 
 #ifndef __APPLE__
@@ -40,19 +39,9 @@ void InitializeRenderer(System* system, SystemEventHandlers* eventSystem)
 #endif
 }
 
-void DeinitializeRenderer(System* system)
+RenderingSystem* CreateRenderer(SystemAllocator allocator)
 {
-	free(system->m_Data);
-}
-
-System CreateRenderer()
-{
-	System rendererSystem;
-	rendererSystem.m_Initialize = InitializeRenderer;
-	rendererSystem.m_Deinitialize = DeinitializeRenderer;
-	rendererSystem.m_Data = malloc(sizeof(RenderingSystem));
-
-	return rendererSystem;
+	return (RenderingSystem*)allocator(sizeof(RenderingSystem));
 }
 
 MIST_NAMESPACE_END

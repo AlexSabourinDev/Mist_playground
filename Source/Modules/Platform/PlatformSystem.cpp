@@ -16,13 +16,13 @@
 
 MIST_NAMESPACE
 
-SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEventData);
-SystemEventResult ClearScreen(System* system, SystemEventType, SystemEventData);
+SystemEventResult TickPlatformSystem(void* system, SystemEventType, SystemEventData);
+SystemEventResult ClearScreen(void* system, SystemEventType, SystemEventData);
 
 struct PlatformSystem
 {
 	WindowConfig m_Config;
-	SystemEventHandlers* m_EventSystem;
+	SystemEventDispatch* m_EventSystem;
 	SDL_Window* m_Window;
 };
 
@@ -86,39 +86,45 @@ void InitializeOpenGL(SDL_Window* window)
 	MIST_ASSERT(result == 0);
 }
 
-void InitializePlatformSystem(System* system, SystemEventHandlers* eventSystem)
+PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig config)
 {
-	PlatformSystem* platformSystem = (PlatformSystem*)system->m_Data;
-	platformSystem->m_EventSystem = eventSystem;
-
-	RegisterHandler(eventSystem, SystemEventType::Tick, TickPlatformSystem, system);
-	RegisterHandler(eventSystem, SystemEventType::ClearScreen, ClearScreen, system);
+	PlatformSystem* platform = (PlatformSystem*)allocator(sizeof(PlatformSystem));
+	platform->m_Config = config;
 
 	if (SDL_WasInit(SDL_INIT_VIDEO))
 	{
-		WindowConfig* config = &platformSystem->m_Config;
+		WindowConfig* config = &platform->m_Config;
 		SDL_Window* window = SDL_CreateWindow(ToCStr(&config->m_WindowName), config->m_Rect.x, config->m_Rect.y,
 			config->m_Rect.width, config->m_Rect.height, ConvertWindowFlags(config->m_WindowFlags));
 		MIST_ASSERT(window != nullptr);
 
-		platformSystem->m_Window = window;
+		platform->m_Window = window;
 		InitializeOpenGL(window);
 	}
+
+	return platform;
 }
 
-void DeinitializePlatformSystem(System* system)
+void DestroyPlatformSystem(SystemDeallocator deallocator, PlatformSystem* platform)
 {
-	PlatformSystem* platform = (PlatformSystem*)system->m_Data;
 	SDL_DestroyWindow(platform->m_Window);
 	FreeConfig(&platform->m_Config);
-	free(system->m_Data);
+	deallocator(platform);
+}
+
+void ProvideEventSystem(PlatformSystem* system, SystemEventDispatch* eventSystem)
+{
+	system->m_EventSystem = eventSystem;
+
+	RegisterHandler(eventSystem, SystemEventType::Tick, TickPlatformSystem, system);
+	RegisterHandler(eventSystem, SystemEventType::ClearScreen, ClearScreen, system);
 }
 
 // Event handlers
 
-SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEventData)
+SystemEventResult TickPlatformSystem(void* system, SystemEventType, SystemEventData)
 {
-	PlatformSystem* platform = (PlatformSystem*)system->m_Data;
+	PlatformSystem* platform = (PlatformSystem*)system;
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) 
@@ -126,7 +132,7 @@ SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEven
 		switch (event.type)
 		{
 		case SDL_QUIT:
-			DispatchEvent(platform->m_EventSystem, SystemEventType::Shutdown);
+			DispatchEvent(platform->m_EventSystem, SystemEventType::ShutdownRequest);
 			break;
 		}
 	}
@@ -135,27 +141,12 @@ SystemEventResult TickPlatformSystem(System* system, SystemEventType, SystemEven
 	return SystemEventResult::Ok;
 }
 
-SystemEventResult ClearScreen(System* system, SystemEventType, SystemEventData)
+SystemEventResult ClearScreen(void* system, SystemEventType, SystemEventData)
 {
-	PlatformSystem* platform = (PlatformSystem*)system->m_Data;
+	PlatformSystem* platform = (PlatformSystem*)system;
 	SDL_GL_SwapWindow(platform->m_Window);
 
 	return SystemEventResult::Ok;
-}
-
-
-System CreatePlatformSystem(WindowConfig config)
-{
-	System platformSystem;
-
-	PlatformSystem* platform = (PlatformSystem*)malloc(sizeof(PlatformSystem));
-	platform->m_Config = config;
-
-	platformSystem.m_Data = platform;
-	platformSystem.m_Initialize = &InitializePlatformSystem;
-	platformSystem.m_Deinitialize = &DeinitializePlatformSystem;
-
-	return platformSystem;
 }
 
 
