@@ -1,0 +1,1 @@
+call Gen.bat "Visual Studio 14 2015" VS2015
