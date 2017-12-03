@@ -7,7 +7,7 @@
 
 MIST_NAMESPACE
 
-__declspec(dllexport) void Serialize(cJSON* resource, RectInt* rect)
+void Serialize(cJSON* resource, RectInt* rect)
 {
 	cJSON_AddNumberToObject(resource, "x", rect->x);
 	cJSON_AddNumberToObject(resource, "y", rect->y);
@@ -15,7 +15,7 @@ __declspec(dllexport) void Serialize(cJSON* resource, RectInt* rect)
 	cJSON_AddNumberToObject(resource, "height", rect->height);
 }
 
-__declspec(dllexport) void Deserialize(cJSON* resource, RectInt* rect)
+void Deserialize(cJSON* resource, RectInt* rect)
 {
 	rect->x = cJSON_GetObjectItem(resource, "x")->valueint;
 	rect->y = cJSON_GetObjectItem(resource, "y")->valueint;
@@ -23,7 +23,7 @@ __declspec(dllexport) void Deserialize(cJSON* resource, RectInt* rect)
 	rect->height = cJSON_GetObjectItem(resource, "height")->valueint;
 }
 
-__declspec(dllexport) void Serialize(cJSON* resource, Rect* rect)
+void Serialize(cJSON* resource, Rect* rect)
 {
 	cJSON_AddNumberToObject(resource, "x", rect->x);
 	cJSON_AddNumberToObject(resource, "y", rect->y);
@@ -31,12 +31,26 @@ __declspec(dllexport) void Serialize(cJSON* resource, Rect* rect)
 	cJSON_AddNumberToObject(resource, "height", rect->height);
 }
 
-__declspec(dllexport) void Deserialize(cJSON* resource, Rect* rect)
+void Deserialize(cJSON* resource, Rect* rect)
 {
 	rect->x = (float)cJSON_GetObjectItem(resource, "x")->valuedouble;
 	rect->y = (float)cJSON_GetObjectItem(resource, "y")->valuedouble;
 	rect->width = (float)cJSON_GetObjectItem(resource, "width")->valuedouble;
 	rect->height = (float)cJSON_GetObjectItem(resource, "height")->valuedouble;
+}
+
+void Serialize(cJSON* resource, Vec3* vec)
+{
+	cJSON_AddNumberToObject(resource, "x", vec->x);
+	cJSON_AddNumberToObject(resource, "y", vec->y);
+	cJSON_AddNumberToObject(resource, "z", vec->z);
+}
+
+void Deserialize(cJSON* resource, Vec3* vec)
+{
+	vec->x = (float)cJSON_GetObjectItem(resource, "x")->valuedouble;
+	vec->y = (float)cJSON_GetObjectItem(resource, "y")->valuedouble;
+	vec->x = (float)cJSON_GetObjectItem(resource, "z")->valuedouble;
 }
 
 MIST_NAMESPACE_END

@@ -78,7 +78,7 @@ void InitializeOpenGL(SDL_Window* window)
 	// Add the results, if the results are negative the final result will be negative. The success will still be 0
 	result += SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	result += SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	result += SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	result += SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	result += SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 	SDL_GL_CreateContext(window);

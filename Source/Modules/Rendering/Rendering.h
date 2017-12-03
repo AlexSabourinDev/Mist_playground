@@ -6,15 +6,15 @@
 
 #include <Utility/SystemEventHandler.h>
 
+#include <Rendering/Renderer.h>
+
 MIST_NAMESPACE
 
-extern "C"
-{
-	SystemData InitializeRenderer(SystemAllocator allocator);
-	void DeinitializeRenderer(SystemDeallocator deallocator, SystemData systemData);
+SystemData InitializeRenderer(SystemAllocator allocator);
+void DeinitializeRenderer(SystemDeallocator deallocator, SystemData systemData);
 
-	void ProvideRenderingDependencies(SystemData data, SystemEventDispatch* eventHandler);
-}
+void ProvideRenderingDependencies(SystemData data, SystemEventDispatch* eventHandler);
+
+Renderer* GetRenderer(SystemData system);
 
 MIST_NAMESPACE_END
-
