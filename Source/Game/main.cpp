@@ -7,6 +7,7 @@
 
 #include <Platform/Platform.h>
 #include <Rendering/Rendering.h>
+#include <RenderingPlayground\RenderingPlayground.h>
 
 #include <Systems\System.h>
 
@@ -32,9 +33,11 @@ int main(int argc, char *argv[])
 	Print("Initializing systems");
 	SystemData platformData = InitializePlatform(malloc, argc, argv);
 	SystemData rendererData = InitializeRenderer(malloc);
+	SystemData renderingPlayground = InitializeRenderingPlayground(malloc);
 
 	ProvidePlatformDependencies(platformData, &systemEvents);
 	ProvideRenderingDependencies(rendererData, &systemEvents);
+	ProvideRenderingPlaygroundDependencies(renderingPlayground, GetRenderer(rendererData));
 
 	// Assure that the engine is shutdown when receiving a shutdown event
 	bool lifetimeFlag = true;
@@ -61,8 +64,9 @@ int main(int argc, char *argv[])
 
 
 	Print("Deinitializing systems");
-	DeinitializePlatform(free, platformData);
+	DeinitializeRenderingPlayground(free, renderingPlayground);
 	DeinitializeRenderer(free, rendererData);
+	DeinitializePlatform(free, platformData);
 
 #ifdef _MSC_VER
 	_CrtDumpMemoryLeaks();
