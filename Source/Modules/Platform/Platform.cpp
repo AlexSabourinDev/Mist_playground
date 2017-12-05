@@ -21,7 +21,7 @@ MIST_NAMESPACE
 cJSON* LoadConfig(const char* executableDir)
 {
 	String filePath = Create(executableDir);
-	Append(&filePath, "/../Config/Platform.json");
+	Append(&filePath, "/Config/Platform.json");
 	String fileContents = ReadFile(ToCStr(&filePath));
 
 	cJSON* configData = cJSON_Parse(fileContents.m_StringBuffer);
@@ -65,12 +65,9 @@ Uint32 LoadSubsystemFlags(cJSON* config)
 
 
 
-SystemData InitializePlatform(SystemAllocator allocator, int argc, char *argv[])
+SystemData InitializePlatform(SystemAllocator allocator, const char* dataPath)
 {
-	// Unused param
-	(void)argc;
-
-	cJSON* config = LoadConfig(argv[0]);
+	cJSON* config = LoadConfig(dataPath);
 
 	if (SDL_Init(LoadSubsystemFlags(config)) != 0) {
 		MIST_ASSERT(false);

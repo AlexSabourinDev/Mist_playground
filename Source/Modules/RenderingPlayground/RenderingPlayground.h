@@ -9,10 +9,10 @@
 
 MIST_NAMESPACE
 
-SystemData InitializeRenderingPlayground(SystemAllocator allocator);
+SystemData InitializeRenderingPlayground(SystemAllocator allocator, const char* dataPath);
 void DeinitializeRenderingPlayground(SystemDeallocator deallocator, SystemData systemData);
 
-void ProvideRenderingPlaygroundDependencies(SystemData data, Renderer* renderer);
+void ProvideRenderingPlaygroundDependencies(SystemData data, SystemEventDispatch* dispatch, Renderer* renderer);
 
 MIST_NAMESPACE_END
 

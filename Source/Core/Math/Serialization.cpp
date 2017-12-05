@@ -50,7 +50,23 @@ void Deserialize(cJSON* resource, Vec3* vec)
 {
 	vec->x = (float)cJSON_GetObjectItem(resource, "x")->valuedouble;
 	vec->y = (float)cJSON_GetObjectItem(resource, "y")->valuedouble;
-	vec->x = (float)cJSON_GetObjectItem(resource, "z")->valuedouble;
+	vec->z = (float)cJSON_GetObjectItem(resource, "z")->valuedouble;
+}
+
+void Serialize(cJSON* resource, Vec4* vec)
+{
+	cJSON_AddNumberToObject(resource, "x", vec->x);
+	cJSON_AddNumberToObject(resource, "y", vec->y);
+	cJSON_AddNumberToObject(resource, "z", vec->z);
+	cJSON_AddNumberToObject(resource, "w", vec->w);
+}
+
+void Deserialize(cJSON* resource, Vec4* vec)
+{
+	vec->x = (float)cJSON_GetObjectItem(resource, "x")->valuedouble;
+	vec->y = (float)cJSON_GetObjectItem(resource, "y")->valuedouble;
+	vec->z = (float)cJSON_GetObjectItem(resource, "z")->valuedouble;
+	vec->w = (float)cJSON_GetObjectItem(resource, "w")->valuedouble;
 }
 
 MIST_NAMESPACE_END

@@ -18,5 +18,8 @@ void Deserialize(cJSON* resource, Rect* rect);
 void Serialize(cJSON* resource, Vec3* vec);
 void Deserialize(cJSON* resource, Vec3* vec);
 
+void Serialize(cJSON* resource, Vec4* vec);
+void Deserialize(cJSON* resource, Vec4* vec);
+
 MIST_NAMESPACE_END
 

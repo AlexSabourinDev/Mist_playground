@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
 
 #define GL3_PROTOTYPES 1
 #include <GL/glew.h>
@@ -87,7 +88,7 @@ void BindShaderBuffer(Renderer*, ShaderBuffer buffer)
 }
 
 
-Mesh CreateMesh(Renderer*, MeshVertex* vertices, size_t vertexCount)
+Mesh CreateMesh(Renderer*, MeshVertex* vertices, size_t vertexCount, TransformView* transforms)
 {
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -115,6 +116,8 @@ Mesh CreateMesh(Renderer*, MeshVertex* vertices, size_t vertexCount)
 	Mesh mesh;
 	mesh.m_MeshHandle = vbo;
 	mesh.m_MeshPipeline = vao;
+	mesh.m_VertexCount = vertexCount;
+	mesh.m_Transforms = transforms;
 
 	return mesh;
 }
@@ -195,8 +198,8 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 	// Link
 	GLuint completeShader = glCreateProgram();
 
-	glAttachShader(vertexShader, GL_VERTEX_SHADER);
-	glAttachShader(fragShader, GL_FRAGMENT_SHADER);
+	glAttachShader(completeShader, vertexShader);
+	glAttachShader(completeShader, fragShader);
 
 	glLinkProgram(completeShader);
 
@@ -205,12 +208,21 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 
 	if (programLinkResults == GL_FALSE)
 	{
-		MIST_ASSERT(false);
+		/* The maxLength includes the NULL character */
+		int messageLength;
+		glGetProgramiv(completeShader, GL_INFO_LOG_LENGTH, &messageLength);
+		char* log = (char *)malloc(messageLength);
+
+		glGetProgramInfoLog(completeShader, messageLength, &messageLength, log);
+		printf("Shader Error: %s", log);
+
+		free(log);
 
 		glDeleteProgram(completeShader);
 		glDeleteShader(fragShader);
 		glDeleteShader(vertexShader);
 
+		MIST_ASSERT(false);
 		return {};
 	}
 
@@ -232,27 +244,46 @@ void ReleaseShader(Renderer*, Shader shader)
 	glDeleteShader(shader.m_FragHandle);
 }
 
+void SetActiveShader(Renderer*, Shader shader)
+{
+	glUseProgram(shader.m_ShaderHandle);
+}
+
+void ClearActiveShader(Renderer*)
+{
+	glUseProgram(0);
+}
+
 void Render(Renderer* renderer)
 {
 	for (size_t pipelineHandle = 0; pipelineHandle < renderer->m_ActivePipelines; pipelineHandle++)
 	{
 		PipelineInstance* pipelineInstance = &renderer->m_Pipelines[pipelineHandle];
-		pipelineInstance->m_Pipeline.m_PipelineSetup(pipelineInstance->m_Pipeline.m_PipelineData);
+		pipelineInstance->m_Pipeline.m_PipelineSetup(renderer, pipelineInstance->m_Pipeline.m_PipelineData);
 
 		for (size_t materialHandle = 0; materialHandle < pipelineInstance->m_ActiveMaterials; materialHandle++)
 		{
 			MaterialInstance* materialInstance = &pipelineInstance->m_Materials[materialHandle];
-			materialInstance->m_Material.m_MaterialSetup(materialInstance->m_Material.m_MaterialData);
+			materialInstance->m_Material.m_MaterialSetup(renderer, materialInstance->m_Material.m_MaterialData);
 
 			for (size_t meshHandle = 0; meshHandle < materialInstance->m_ActiveMeshes; meshHandle++)
 			{
-				// TODO: reference the objects position and pass it as a uniform
+				Mesh mesh = materialInstance->m_Meshes[meshHandle];
+
+				glBindVertexArray(mesh.m_MeshHandle);
+				for (size_t transformHandle = 0; transformHandle < mesh.m_Transforms->m_ActiveTransforms; transformHandle++)
+				{
+					glUniform3fv(0, 1, (float*)&mesh.m_Transforms->m_Transforms[transformHandle]);
+
+					glDrawArrays(GL_TRIANGLES, 0, mesh.m_VertexCount);
+				}
+				glBindVertexArray(0);
 			}
 
-			materialInstance->m_Material.m_MaterialSetup(materialInstance->m_Material.m_MaterialData);
+			materialInstance->m_Material.m_MaterialSetup(renderer, materialInstance->m_Material.m_MaterialData);
 		}
 
-		pipelineInstance->m_Pipeline.m_PipelineTeardown(pipelineInstance->m_Pipeline.m_PipelineData);
+		pipelineInstance->m_Pipeline.m_PipelineTeardown(renderer, pipelineInstance->m_Pipeline.m_PipelineData);
 	}
 }
 
@@ -289,12 +320,12 @@ void DestroyRenderer(SystemDeallocator deallocator, Renderer* renderer)
 	for (size_t pipelineHandle = 0; pipelineHandle < renderer->m_ActivePipelines; pipelineHandle++)
 	{
 		PipelineInstance* pipelineInstance = &renderer->m_Pipelines[pipelineHandle];
-		pipelineInstance->m_Pipeline.m_PipelineRelease(deallocator, pipelineInstance->m_Pipeline.m_PipelineData);
+		pipelineInstance->m_Pipeline.m_PipelineRelease(renderer, deallocator, pipelineInstance->m_Pipeline.m_PipelineData);
 
 		for (size_t materialHandle = 0; materialHandle < pipelineInstance->m_ActiveMaterials; materialHandle++)
 		{
 			MaterialInstance* materialInstance = &pipelineInstance->m_Materials[materialHandle];
-			materialInstance->m_Material.m_MaterialRelease(deallocator, materialInstance->m_Material.m_MaterialData);
+			materialInstance->m_Material.m_MaterialRelease(renderer, deallocator, materialInstance->m_Material.m_MaterialData);
 
 			for (size_t meshHandle = 0; meshHandle < materialInstance->m_ActiveMeshes; meshHandle++)
 			{

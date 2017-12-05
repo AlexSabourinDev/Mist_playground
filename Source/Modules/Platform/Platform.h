@@ -10,7 +10,7 @@ MIST_NAMESPACE
 
 extern "C"
 {
-	SystemData InitializePlatform(SystemAllocator allocator, int argc, char *argv[]);
+	SystemData InitializePlatform(SystemAllocator allocator, const char* dataPath);
 	void DeinitializePlatform(SystemDeallocator deallocator, SystemData data);
 
 	// The platform module requries a system event handler in order to communicate to other systems

@@ -13,6 +13,12 @@ MIST_NAMESPACE
 
 struct Renderer;
 
+struct TransformView
+{
+	Vec3* m_Transforms;
+	size_t m_ActiveTransforms;
+};
+
 struct MeshVertex
 {
 	Vec3 m_Position;
@@ -23,27 +29,32 @@ struct Mesh
 	// This probably only works for opengl but it works for this simple system
 	unsigned int m_MeshPipeline;
 	unsigned int m_MeshHandle;
+
+	size_t m_VertexCount;
+
+	// Allow others to modify our transform view
+	TransformView* m_Transforms;
 };
 
 using PipelineHandle = unsigned int;
 struct Pipeline
 {
-	void(*m_PipelineSetup)(void* pipelineData);
-	void(*m_PipelineTeardown)(void* pipelineData);
+	void(*m_PipelineSetup)(Renderer* renderer, void* pipelineData);
+	void(*m_PipelineTeardown)(Renderer* renderer, void* pipelineData);
 
 	// Release the data associated to the pipeline
-	void(*m_PipelineRelease)(SystemDeallocator deallocator, void* pipelineData);
+	void(*m_PipelineRelease)(Renderer* renderer, SystemDeallocator deallocator, void* pipelineData);
 	void* m_PipelineData;
 };
 
 using MaterialHandle = unsigned int;
 struct Material
 {
-	void(*m_MaterialSetup)(void* materialData);
-	void(*m_MaterialTearDown)(void* materialData);
+	void(*m_MaterialSetup)(Renderer* renderer, void* materialData);
+	void(*m_MaterialTeardown)(Renderer* renderer, void* materialData);
 
 	// Release the data associated to the material
-	void(*m_MaterialRelease)(SystemDeallocator deallocator, void* materialData);
+	void(*m_MaterialRelease)(Renderer* renderer, SystemDeallocator deallocator, void* materialData);
 	void* m_MaterialData;
 };
 
@@ -72,7 +83,7 @@ void BindShaderBuffer(Renderer* renderer, ShaderBuffer buffer);
 
 
 // Meshes
-Mesh CreateMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount);
+Mesh CreateMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount, TransformView* transforms);
 void AddMesh(Renderer* renderer, PipelineHandle pipeline, MaterialHandle material, Mesh mesh);
 
 // Pipelines
@@ -84,5 +95,8 @@ MaterialHandle AddMaterial(Renderer* renderer, PipelineHandle pipeline, Material
 // Shaders, Currently we only support shader source as strings. In the future, we'll probably make it take bytecode
 Shader CreateShader(Renderer* renderer, const char* vertShaderSource, const char* fragShaderSource);
 void ReleaseShader(Renderer* renderer, Shader shader);
+
+void SetActiveShader(Renderer* renderer, Shader shader);
+void ClearActiveShader(Renderer* renderer);
 
 MIST_NAMESPACE_END

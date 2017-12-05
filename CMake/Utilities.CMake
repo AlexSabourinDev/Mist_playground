@@ -77,7 +77,7 @@ endfunction( AddExecutable )
 
 
 function( CopyDataToOutput targetName)
-	set( COPY_SOURCE ${CMAKE_SOURCE_DIR}/../Data )
+	set( COPY_SOURCE ${CMAKE_SOURCE_DIR}/../Data/InitData/ )
 	set( DEST_SOURCE $<TARGET_FILE_DIR:${targetName}> )
 	add_custom_command( TARGET ${targetName} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${COPY_SOURCE}" "${DEST_SOURCE}" )
 endfunction( CopyDataToOutput )
