@@ -171,8 +171,17 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 
 	if (vertCompilationResults == GL_FALSE)
 	{
-		MIST_ASSERT(false);
+		int messageLength;
+		glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &messageLength);
+		char* log = (char *)malloc(messageLength);
+
+		glGetShaderInfoLog(vertexShader, messageLength, &messageLength, log);
+		printf("Shader Error: %s", log);
+
+		free(log);
+
 		glDeleteShader(vertexShader);
+		MIST_ASSERT(false);
 
 		// TODO: Log?
 		return {};
@@ -188,8 +197,17 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 
 	if (fragCompilationResults == GL_FALSE)
 	{
-		MIST_ASSERT(false);
+		int messageLength;
+		glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &messageLength);
+		char* log = (char *)malloc(messageLength);
+
+		glGetShaderInfoLog(fragShader, messageLength, &messageLength, log);
+		printf("Shader Error: %s", log);
+
+		free(log);
+
 		glDeleteShader(fragShader);
+		MIST_ASSERT(false);
 
 		// TODO: Log?
 		return {};
@@ -208,7 +226,6 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 
 	if (programLinkResults == GL_FALSE)
 	{
-		/* The maxLength includes the NULL character */
 		int messageLength;
 		glGetProgramiv(completeShader, GL_INFO_LOG_LENGTH, &messageLength);
 		char* log = (char *)malloc(messageLength);

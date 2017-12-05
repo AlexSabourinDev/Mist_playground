@@ -118,8 +118,8 @@ SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
 	playground->m_Transforms.m_Transforms = &playground->m_PlaygroundTransform;
 	playground->m_Transforms.m_ActiveTransforms = 1;
 
-	MeshVertex vertices[] = { { -0.5f, -0.5f, 0.0f }, { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.5f, 0.0f } };
-	Mesh playgroundMesh = CreateMesh(playground->m_Renderer, vertices, 3, &playground->m_Transforms);
+	MeshVertex vertices[] = { { -0.5f, -0.5f, 0.0f }, { 0.5f, -0.5f, 0.0f }, { 0.5f, 0.5f, 0.0f }, { -0.5f, -0.5f, 0.0f }, { 0.5f, 0.5f, 0.0f }, {-0.5, 0.5, 0.0} };
+	Mesh playgroundMesh = CreateMesh(playground->m_Renderer, vertices, 6, &playground->m_Transforms);
 	AddMesh(playground->m_Renderer, pipelineHandle, materialHandle, playgroundMesh);
 
 	return SystemEventResult::Ok;
