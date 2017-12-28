@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <cstdint>
 
 #define GL3_PROTOTYPES 1
 #include <GL/glew.h>
@@ -19,76 +20,43 @@ MIST_NAMESPACE
 
 // Renderer structures
 
-struct MaterialInstance
+// -Meshes-
+struct Mesh
 {
-	Material m_Material;
-
-	Mesh m_Meshes[10];
-	size_t m_ActiveMeshes;
+	unsigned int m_MeshHandle;
+	unsigned int m_MeshPipeline;
+	unsigned int m_VertexCount;
 };
+Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount);
+void ReleaseMesh(Mesh mesh);
 
-struct PipelineInstance
+// -Shaders-
+struct Shader
 {
-	Pipeline m_Pipeline;
-
-	MaterialInstance m_Materials[4];
-	size_t m_ActiveMaterials;
+	unsigned int m_ShaderHandle;
+	unsigned int m_VertHandle;
+	unsigned int m_FragHandle;
 };
+Shader CreateShader(const char* vertShaderSource, const char* fragShaderSource);
+void ReleaseShader(Shader shader);
 
+// -Renderer-
 struct Renderer
 {
 	SystemEventDispatch* m_EventSystem;
 
-	// 2 rendering passes is a good max for now
-	PipelineInstance m_Pipelines[2];
-	size_t m_ActivePipelines;
+	Shader m_Shaders[256];
+	Mesh m_Meshes[256];
+
+	// Support a variety of Materials
+	uint8_t m_MaterialBuffer[1024];
 };
 
 
 // API Implementation
 
-void ClearScreen(Renderer*, Vec4 color)
-{
-	glClearColor(color.x, color.y, color.z, color.w);
-	glClear(GL_COLOR_BUFFER_BIT);
-}
-
-void SetViewport(Renderer*, RectInt viewport)
-{
-	glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
-}
-
-ShaderBuffer CreateShaderBuffer(Renderer* renderer, unsigned int bufferIndex)
-{
-	GLuint shaderBuffer;
-	glGenBuffers(1, &shaderBuffer);
-
-	ShaderBuffer buffer;
-	buffer.m_BufferHandle = shaderBuffer;
-	buffer.m_BufferIndex = bufferIndex;
-
-	return buffer;
-}
-
-void ReleaseShaderBuffer(Renderer*, ShaderBuffer buffer)
-{
-	glDeleteBuffers(1, &buffer.m_BufferHandle);
-}
-
-void SetShaderData(Renderer*, ShaderBuffer buffer, void* bufferData, size_t bufferSize)
-{
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer.m_BufferHandle);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, bufferData, GL_DYNAMIC_COPY);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-void BindShaderBuffer(Renderer*, ShaderBuffer buffer)
-{
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, buffer.m_BufferHandle, buffer.m_BufferIndex);
-}
-
-
-Mesh CreateMesh(Renderer*, MeshVertex* vertices, size_t vertexCount, TransformView* transforms)
+// -Mesh Implementation-
+Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount)
 {
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -117,49 +85,18 @@ Mesh CreateMesh(Renderer*, MeshVertex* vertices, size_t vertexCount, TransformVi
 	mesh.m_MeshHandle = vbo;
 	mesh.m_MeshPipeline = vao;
 	mesh.m_VertexCount = vertexCount;
-	mesh.m_Transforms = transforms;
 
 	return mesh;
 }
 
-PipelineHandle AddPipeline(Renderer* renderer, Pipeline pipeline)
+void ReleaseMesh(Mesh mesh)
 {
-	PipelineHandle pipelineHandle = renderer->m_ActivePipelines;
-
-	// TODO: assure that we don't add too many pipelines
-	renderer->m_Pipelines[pipelineHandle] = { pipeline };
-	renderer->m_ActivePipelines++;
-
-	return pipelineHandle;
+	glDeleteBuffers(1, &mesh.m_MeshHandle);
+	glDeleteVertexArrays(1, &mesh.m_MeshPipeline);
 }
 
-MaterialHandle AddMaterial(Renderer* renderer, PipelineHandle pipelineHandle, Material material)
-{
-	MIST_ASSERT(pipelineHandle < renderer->m_ActivePipelines);
-	PipelineInstance* pipeline = &renderer->m_Pipelines[pipelineHandle];
-
-	// TODO: assure that we don't add too many materials
-	MaterialHandle materialHandle = pipeline->m_ActiveMaterials;
-	pipeline->m_Materials[materialHandle] = { material };
-	pipeline->m_ActiveMaterials++;
-
-	return materialHandle;
-}
-
-void AddMesh(Renderer* renderer, PipelineHandle pipelineHandle, MaterialHandle materialHandle, Mesh mesh)
-{
-	MIST_ASSERT(pipelineHandle < renderer->m_ActivePipelines);
-	PipelineInstance* pipeline = &renderer->m_Pipelines[pipelineHandle];
-
-	MIST_ASSERT(materialHandle < pipeline->m_ActiveMaterials);
-	MaterialInstance* material = &pipeline->m_Materials[materialHandle];
-
-	// TODO: assure that we don't add too many meshes
-	material->m_Meshes[material->m_ActiveMeshes] = mesh;
-	material->m_ActiveMeshes++;
-}
-
-Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragShaderSource)
+// -Shader implementations-
+Shader CreateShader(const char* vertShaderSource, const char* fragShaderSource)
 {
 	// Vert Shader
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -183,7 +120,6 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 		glDeleteShader(vertexShader);
 		MIST_ASSERT(false);
 
-		// TODO: Log?
 		return {};
 	}
 
@@ -209,7 +145,6 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 		glDeleteShader(fragShader);
 		MIST_ASSERT(false);
 
-		// TODO: Log?
 		return {};
 	}
 
@@ -254,60 +189,16 @@ Shader CreateShader(Renderer*, const char* vertShaderSource, const char* fragSha
 	return shader;
 }
 
-void ReleaseShader(Renderer*, Shader shader)
+void ReleaseShader(Shader shader)
 {
 	glDeleteProgram(shader.m_ShaderHandle);
 	glDeleteShader(shader.m_VertHandle);
 	glDeleteShader(shader.m_FragHandle);
 }
 
-void SetActiveShader(Renderer*, Shader shader)
-{
-	glUseProgram(shader.m_ShaderHandle);
-}
-
-void ClearActiveShader(Renderer*)
-{
-	glUseProgram(0);
-}
-
-void Render(Renderer* renderer)
-{
-	for (size_t pipelineHandle = 0; pipelineHandle < renderer->m_ActivePipelines; pipelineHandle++)
-	{
-		PipelineInstance* pipelineInstance = &renderer->m_Pipelines[pipelineHandle];
-		pipelineInstance->m_Pipeline.m_PipelineSetup(renderer, pipelineInstance->m_Pipeline.m_PipelineData);
-
-		for (size_t materialHandle = 0; materialHandle < pipelineInstance->m_ActiveMaterials; materialHandle++)
-		{
-			MaterialInstance* materialInstance = &pipelineInstance->m_Materials[materialHandle];
-			materialInstance->m_Material.m_MaterialSetup(renderer, materialInstance->m_Material.m_MaterialData);
-
-			for (size_t meshHandle = 0; meshHandle < materialInstance->m_ActiveMeshes; meshHandle++)
-			{
-				Mesh mesh = materialInstance->m_Meshes[meshHandle];
-
-				glBindVertexArray(mesh.m_MeshHandle);
-				for (size_t transformHandle = 0; transformHandle < mesh.m_Transforms->m_ActiveTransforms; transformHandle++)
-				{
-					glUniform3fv(0, 1, (float*)&mesh.m_Transforms->m_Transforms[transformHandle]);
-
-					glDrawArrays(GL_TRIANGLES, 0, mesh.m_VertexCount);
-				}
-				glBindVertexArray(0);
-			}
-
-			materialInstance->m_Material.m_MaterialSetup(renderer, materialInstance->m_Material.m_MaterialData);
-		}
-
-		pipelineInstance->m_Pipeline.m_PipelineTeardown(renderer, pipelineInstance->m_Pipeline.m_PipelineData);
-	}
-}
-
 SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 {
 	Renderer* renderingSystem = (Renderer*)system;
-	Render(renderingSystem);
 
 	DispatchEvent(renderingSystem->m_EventSystem, SystemEventType::ClearScreen);
 	return SystemEventResult::Ok;
@@ -334,25 +225,6 @@ Renderer* CreateRenderer(SystemAllocator allocator)
 
 void DestroyRenderer(SystemDeallocator deallocator, Renderer* renderer)
 {
-	for (size_t pipelineHandle = 0; pipelineHandle < renderer->m_ActivePipelines; pipelineHandle++)
-	{
-		PipelineInstance* pipelineInstance = &renderer->m_Pipelines[pipelineHandle];
-		pipelineInstance->m_Pipeline.m_PipelineRelease(renderer, deallocator, pipelineInstance->m_Pipeline.m_PipelineData);
-
-		for (size_t materialHandle = 0; materialHandle < pipelineInstance->m_ActiveMaterials; materialHandle++)
-		{
-			MaterialInstance* materialInstance = &pipelineInstance->m_Materials[materialHandle];
-			materialInstance->m_Material.m_MaterialRelease(renderer, deallocator, materialInstance->m_Material.m_MaterialData);
-
-			for (size_t meshHandle = 0; meshHandle < materialInstance->m_ActiveMeshes; meshHandle++)
-			{
-				Mesh mesh = materialInstance->m_Meshes[meshHandle];
-				glDeleteBuffers(1, &mesh.m_MeshHandle);
-				glDeleteVertexArrays(1, &mesh.m_MeshPipeline);
-			}
-		}
-	}
-
 	deallocator(renderer);
 }
 
