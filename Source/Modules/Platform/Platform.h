@@ -4,17 +4,14 @@
 
 #include <Systems/System.h>
 
-#include <Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 
-MIST_NAMESPACE
+MistNamespace
 
-extern "C"
-{
-	SystemData InitializePlatform(SystemAllocator allocator, const char* dataPath);
-	void DeinitializePlatform(SystemDeallocator deallocator, SystemData data);
+SystemData InitializePlatform(SystemAllocator allocator, const char* dataPath);
+void DeinitializePlatform(SystemDeallocator deallocator, SystemData data);
 
-	// The platform module requries a system event handler in order to communicate to other systems
-	void ProvidePlatformDependencies(SystemData data, SystemEventDispatch* eventHandler);
-}
+// The platform module requries a system event handler in order to communicate to other systems
+void ProvidePlatformDependencies(SystemData data, SystemEventDispatch* eventHandler);
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

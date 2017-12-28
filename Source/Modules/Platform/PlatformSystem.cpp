@@ -5,7 +5,7 @@
 #include <Utility/BitManipulations.h>
 #include <Utility/String.h>
 
-#include <Core/Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 
 #include <Math\Serialization.h>
 
@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-MIST_NAMESPACE
+MistNamespace
 
 SystemEventResult TickPlatformSystem(void* system, SystemEventType, SystemEventData);
 SystemEventResult ClearScreen(void* system, SystemEventType, SystemEventData);
@@ -83,7 +83,7 @@ void InitializeOpenGL(SDL_Window* window)
 
 	SDL_GL_CreateContext(window);
 
-	MIST_ASSERT(result == 0);
+	MistAssert(result == 0);
 }
 
 PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig config)
@@ -96,7 +96,7 @@ PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig con
 		WindowConfig* config = &platform->m_Config;
 		SDL_Window* window = SDL_CreateWindow(ToCStr(&config->m_WindowName), config->m_Rect.x, config->m_Rect.y,
 			config->m_Rect.width, config->m_Rect.height, ConvertWindowFlags(config->m_WindowFlags));
-		MIST_ASSERT(window != nullptr);
+		MistAssert(window != nullptr);
 
 		platform->m_Window = window;
 		InitializeOpenGL(window);
@@ -150,4 +150,4 @@ SystemEventResult ClearScreen(void* system, SystemEventType, SystemEventData)
 }
 
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

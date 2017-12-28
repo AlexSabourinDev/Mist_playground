@@ -3,16 +3,16 @@
 #include <Mist_Common\include\UtilityMacros.h>
 
 #include <Core/Systems/System.h>
-#include <Core/Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 
 #include <Rendering\Renderer.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 SystemData InitializeRenderingPlayground(SystemAllocator allocator, const char* dataPath);
 void DeinitializeRenderingPlayground(SystemDeallocator deallocator, SystemData systemData);
 
 void ProvideRenderingPlaygroundDependencies(SystemData data, SystemEventDispatch* dispatch, Renderer* renderer);
 
-MIST_NAMESPACE_END
+MistNamespaceEnd
 

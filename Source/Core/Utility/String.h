@@ -2,7 +2,7 @@
 
 #include <Mist_Common\include\UtilityMacros.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 // -String-
 struct String
@@ -38,4 +38,4 @@ __declspec(dllexport) void Reserve(String* string, size_t size);
 __declspec(dllexport) const char* ToCStr(String* string);
 
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

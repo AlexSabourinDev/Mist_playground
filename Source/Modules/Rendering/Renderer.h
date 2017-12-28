@@ -5,13 +5,13 @@
 #include <Core/Systems/System.h>
 
 #include <Core/Math/Vector.h>
+#include <Core/Math/Transform.h>
 
-#include <cstdint>
+#include <stdint.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 struct Renderer;
-
 
 // -Meshes-
 struct MeshVertex
@@ -20,12 +20,35 @@ struct MeshVertex
 };
 
 using MeshKey = uint16_t;
+// Mesh vertices should be passed in counterclockwise order, otherwise, they will be thought of as backfaces.
 MeshKey AddMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount);
-
 
 // -Materials-
 using MaterialKey = uint16_t;
 MaterialKey AddMaterial(Renderer* renderer, void* materialData);
+
+using ShaderKey = uint16_t;
+ShaderKey AddShader(Renderer* renderer, const char* vertShader, const char* fragShader);
+
+using CameraKey = uint16_t;
+CameraKey AddCamera(Renderer* renderer);
+
+
+// -RenderKey-
+// Build a renderkey for the collection of material + mesh that you would like to use for your object. This will allow the renderer
+// to sort all the rendering submissions by RenderKey thus minimizing state changes in the rendering architecture.
+using RenderKey = uint64_t;
+
+inline RenderKey BuildRenderKey(CameraKey cameraKey, MaterialKey materialKey, MeshKey meshKey)
+{
+	MistAssert((RenderKey)materialKey <= ((1 << 16) - 1));
+	MistAssert((RenderKey)meshKey <= ((1 << 16) - 1));
+	MistAssert((RenderKey)cameraKey <= ((1 << 16) - 1));
+
+	return ((RenderKey)cameraKey << 32) | ((RenderKey)materialKey << 16) | ((RenderKey)meshKey & ((1 << 16) - 1));
+}
+// Submit a camera and a renderer submission to be rendered by that camera.
+void Submit(Renderer* renderer, RenderKey renderKey, Transform* transforms, size_t transformCount);
 
 
 // -Material Structs-
@@ -37,32 +60,16 @@ enum class MaterialType : uint8_t
 };
 
 // MIST_MATERIAL_DATA must be at the top of the material structure
-#define MIST_MATERIAL_DATA \
-	size_t m_Size; \
-	MaterialType m_Type
+#define MistMaterialData \
+	uint16_t size; \
+	MaterialType type
 
+// All material APIs are to be defined here. Their construction should set their material type and size on construction.
+// This should only be handled at material construction time, this should not happen at runtime but in an earlier step in the pipeline and save directly to a file.
 struct DefaultMaterial
 {
-	MIST_MATERIAL_DATA;
+	MistMaterialData;
+	ShaderKey shader;
 };
 
-
-// -RenderKey-
-using RenderKey = uint32_t;
-
-const int MAX_MATERIAL_BIT_COUNT = sizeof(MaterialKey) / 8;
-const int MAX_MESH_BIT_COUNT = sizeof(MeshKey) / 8;
-
-const RenderKey MAX_MATERIAL_COUNT = ((1 << MAX_MATERIAL_BIT_COUNT) - 1);
-const RenderKey MAX_MESH_COUNT = ((1 << MAX_MESH_BIT_COUNT) - 1);
-
-inline RenderKey BuildRenderKey(uint8_t materialKey, uint32_t meshKey)
-{
-	MIST_ASSERT((RenderKey)materialKey <= MAX_MATERIAL_COUNT);
-	MIST_ASSERT((RenderKey)meshKey <= MAX_MESH_COUNT);
-
-	return ((RenderKey)materialKey << (32 - MAX_MATERIAL_BIT_COUNT)) | ((RenderKey)meshKey & MAX_MESH_COUNT);
-}
-
-
-MIST_NAMESPACE_END
+MistNamespaceEnd

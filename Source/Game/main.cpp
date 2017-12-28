@@ -11,7 +11,7 @@
 
 #include <Systems\System.h>
 
-#include <Core/Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 #include <Core/Utility/String.h>
 #include <Core/Utility/FileIO.h>
 
@@ -20,7 +20,7 @@
 #include <cstdio>
 
 
-using namespace MIST_NAMESPACE_NAME;
+using namespace MistNamespaceName;
 
 void Print(const char* string)
 {

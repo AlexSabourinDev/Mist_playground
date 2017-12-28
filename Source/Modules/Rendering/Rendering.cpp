@@ -6,7 +6,7 @@
 
 #include <cstring>
 
-MIST_NAMESPACE
+MistNamespace
 
 // Forward declare the rendering creation that will be used by other renderers.
 Renderer* CreateRenderer(SystemAllocator allocator);
@@ -34,4 +34,4 @@ Renderer* GetRenderer(SystemData system)
 	return (Renderer*)system;
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

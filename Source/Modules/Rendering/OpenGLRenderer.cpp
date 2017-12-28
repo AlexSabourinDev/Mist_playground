@@ -2,30 +2,30 @@
 
 #include <Rendering\Renderer.h>
 
-#include <Utility\SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 
 #include <Systems/System.h>
 
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
-#include <cstdint>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdint.h>
 
 #define GL3_PROTOTYPES 1
 #include <GL/glew.h>
 
 #include <GL/GL.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 // Renderer structures
 
 // -Meshes-
 struct Mesh
 {
-	unsigned int m_MeshHandle;
-	unsigned int m_MeshPipeline;
-	unsigned int m_VertexCount;
+	unsigned int meshHandle;
+	unsigned int meshPipeline;
+	unsigned int vertexCount;
 };
 Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount);
 void ReleaseMesh(Mesh mesh);
@@ -33,27 +33,103 @@ void ReleaseMesh(Mesh mesh);
 // -Shaders-
 struct Shader
 {
-	unsigned int m_ShaderHandle;
-	unsigned int m_VertHandle;
-	unsigned int m_FragHandle;
+	unsigned int shaderHandle;
+	unsigned int vertHandle;
+	unsigned int fragHandle;
 };
 Shader CreateShader(const char* vertShaderSource, const char* fragShaderSource);
 void ReleaseShader(Shader shader);
 
+struct Camera
+{
+	// TODO: Add data to the camera structure
+};
+
+struct Submission
+{
+	RenderKey key;
+	Transform* transforms;
+	size_t transformCount;
+};
+
+struct MaterialData
+{
+	MistMaterialData;
+};
+
+
 // -Renderer-
+
+const uint16_t MaxMeshCount = 256;
+const uint16_t MaxShaderCount = 256;
+const uint16_t MaxCameraCount = 8;
+const uint16_t MaxSubmissionCount = 10;
+const uint16_t MaterialBufferSize = 1024;
 struct Renderer
 {
-	SystemEventDispatch* m_EventSystem;
+	SystemEventDispatch* eventSystem;
 
-	Shader m_Shaders[256];
-	Mesh m_Meshes[256];
+	Shader shaders[MaxShaderCount];
+	ShaderKey nextShaderIndex;
+
+	Mesh meshes[MaxMeshCount];
+	MeshKey nextMeshIndex;
+
+	Camera cameras[MaxCameraCount];
+	CameraKey nextCameraIndex;
 
 	// Support a variety of Materials
-	uint8_t m_MaterialBuffer[1024];
+	uint8_t materialBuffer[MaterialBufferSize];
+	uint16_t nextMaterialIndex;
+
+	Submission submissions[MaxSubmissionCount];
+	uint16_t nextSubmissionIndex;
 };
 
 
 // API Implementation
+
+MaterialKey AddMaterial(Renderer* renderer, void* material)
+{
+	MaterialData* materialData = (MaterialData*)material;
+	MistAssert(materialData->size > 0);
+	MistAssert(renderer->nextMaterialIndex + materialData->size < MaterialBufferSize);
+	MistAssert(materialData->type != MaterialType::Invalid);
+
+	memcpy(&renderer->materialBuffer[renderer->nextMaterialIndex], materialData, materialData->size);
+
+	MaterialKey previousMaterialKey = renderer->nextMaterialIndex;
+	renderer->nextMaterialIndex += materialData->size;
+	return previousMaterialKey;
+}
+
+MeshKey AddMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount)
+{
+	MistAssert(renderer->nextMeshIndex < MaxMeshCount);
+	renderer->meshes[renderer->nextMeshIndex] = CreateMesh(vertices, vertexCount);
+	return renderer->nextMeshIndex++;
+}
+
+ShaderKey AddShader(Renderer* renderer, const char* vertShader, const char* fragShader)
+{
+	MistAssert(renderer->nextShaderIndex < MaxShaderCount);
+	renderer->shaders[renderer->nextShaderIndex] = CreateShader(vertShader, fragShader);
+	return renderer->nextShaderIndex++;
+}
+
+CameraKey AddCamera(Renderer* renderer)
+{
+	MistAssert(renderer->nextCameraIndex < MaxCameraCount);
+	return renderer->nextCameraIndex++;
+}
+
+// Submit a camera and a renderer submission to be rendered by that camera.
+void Submit(Renderer* renderer, RenderKey renderKey, Transform* transforms, size_t transformCount)
+{
+	MistAssert(renderer->nextSubmissionIndex < MaxSubmissionCount);
+	renderer->submissions[renderer->nextSubmissionIndex] = { renderKey, transforms, transformCount };
+	renderer->nextSubmissionIndex++;
+}
 
 // -Mesh Implementation-
 Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount)
@@ -82,17 +158,17 @@ Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount)
 	glBindVertexArray(0);
 
 	Mesh mesh;
-	mesh.m_MeshHandle = vbo;
-	mesh.m_MeshPipeline = vao;
-	mesh.m_VertexCount = vertexCount;
+	mesh.meshHandle = vbo;
+	mesh.meshPipeline = vao;
+	mesh.vertexCount = vertexCount;
 
 	return mesh;
 }
 
 void ReleaseMesh(Mesh mesh)
 {
-	glDeleteBuffers(1, &mesh.m_MeshHandle);
-	glDeleteVertexArrays(1, &mesh.m_MeshPipeline);
+	glDeleteBuffers(1, &mesh.meshHandle);
+	glDeleteVertexArrays(1, &mesh.meshPipeline);
 }
 
 // -Shader implementations-
@@ -118,7 +194,7 @@ Shader CreateShader(const char* vertShaderSource, const char* fragShaderSource)
 		free(log);
 
 		glDeleteShader(vertexShader);
-		MIST_ASSERT(false);
+		MistAssert(false);
 
 		return {};
 	}
@@ -143,7 +219,7 @@ Shader CreateShader(const char* vertShaderSource, const char* fragShaderSource)
 		free(log);
 
 		glDeleteShader(fragShader);
-		MIST_ASSERT(false);
+		MistAssert(false);
 
 		return {};
 	}
@@ -174,7 +250,7 @@ Shader CreateShader(const char* vertShaderSource, const char* fragShaderSource)
 		glDeleteShader(fragShader);
 		glDeleteShader(vertexShader);
 
-		MIST_ASSERT(false);
+		MistAssert(false);
 		return {};
 	}
 
@@ -182,25 +258,78 @@ Shader CreateShader(const char* vertShaderSource, const char* fragShaderSource)
 	glDetachShader(completeShader, fragShader);
 
 	Shader shader;
-	shader.m_ShaderHandle = completeShader;
-	shader.m_VertHandle = vertexShader;
-	shader.m_FragHandle = fragShader;
+	shader.shaderHandle = completeShader;
+	shader.vertHandle = vertexShader;
+	shader.fragHandle = fragShader;
 
 	return shader;
 }
 
 void ReleaseShader(Shader shader)
 {
-	glDeleteProgram(shader.m_ShaderHandle);
-	glDeleteShader(shader.m_VertHandle);
-	glDeleteShader(shader.m_FragHandle);
+	glDeleteProgram(shader.shaderHandle);
+	glDeleteShader(shader.vertHandle);
+	glDeleteShader(shader.fragHandle);
+}
+
+void EnableMaterial(Renderer* renderer, void* materialData)
+{
+	MaterialData* data = (MaterialData*)materialData;
+	switch (data->type)
+	{
+	case MaterialType::Default:
+		DefaultMaterial* defaultMaterial = (DefaultMaterial*)materialData;
+		glUseProgram(renderer->shaders[defaultMaterial->shader].shaderHandle);
+		break;
+	}
+}
+
+void DisableMaterial(Renderer* renderer, void* materialData)
+{
+	MaterialData* data = (MaterialData*)materialData;
+	switch (data->type)
+	{
+	case MaterialType::Default:
+		glUseProgram(0);
+		break;
+	}
 }
 
 SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 {
-	Renderer* renderingSystem = (Renderer*)system;
+	Renderer* renderer = (Renderer*)system;
 
-	DispatchEvent(renderingSystem->m_EventSystem, SystemEventType::ClearScreen);
+	qsort(renderer->submissions, renderer->nextSubmissionIndex, sizeof(Submission), [](const void* left, const void* right)->int
+	{
+		return ((int64_t)((Submission*)left)->key) - ((int64_t)((Submission*)right)->key);
+	});
+
+	for (size_t i = 0; i < renderer->nextSubmissionIndex; ++i)
+	{
+		CameraKey cameraKey = (CameraKey)(renderer->submissions[i].key >> 32);
+		MaterialKey materialKey = (MaterialKey)(renderer->submissions[i].key >> 16);
+		MeshKey meshKey = (MeshKey)(renderer->submissions[i].key);
+
+		// Find the camera
+		Camera* camera = &renderer->cameras[cameraKey];
+		// TODO: Add camera functionality
+
+		EnableMaterial(renderer, &renderer->materialBuffer[materialKey]);
+		glBindVertexArray(renderer->meshes[meshKey].meshPipeline);
+
+		for (size_t transformIndex = 0; transformIndex < renderer->submissions[i].transformCount; transformIndex++)
+		{
+			// TODO: Bind the current transform
+			glDrawArrays(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount);
+		}
+
+		glBindVertexArray(0);
+		DisableMaterial(renderer, &renderer->materialBuffer[materialKey]);
+	}
+
+	renderer->nextSubmissionIndex = 0;
+
+	DispatchEvent(renderer->eventSystem, SystemEventType::ClearScreen);
 	return SystemEventResult::Ok;
 }
 
@@ -208,7 +337,7 @@ void ProvideEventDispatchToRenderer(Renderer* renderingSystem, SystemEventDispat
 {
 	RegisterHandler(eventSystem, SystemEventType::Tick, TickRenderer, renderingSystem);
 
-	renderingSystem->m_EventSystem = eventSystem;
+	renderingSystem->eventSystem = eventSystem;
 }
 
 Renderer* CreateRenderer(SystemAllocator allocator)
@@ -225,8 +354,17 @@ Renderer* CreateRenderer(SystemAllocator allocator)
 
 void DestroyRenderer(SystemDeallocator deallocator, Renderer* renderer)
 {
+	for (size_t i = 0; i < renderer->nextMeshIndex; i++)
+	{
+		ReleaseMesh(renderer->meshes[i]);
+	}
+
+	for (size_t i = 0; i < renderer->nextShaderIndex; i++)
+	{
+		ReleaseShader(renderer->shaders[i]);
+	}
 	deallocator(renderer);
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd
 

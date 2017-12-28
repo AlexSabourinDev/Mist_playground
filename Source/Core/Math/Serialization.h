@@ -7,7 +7,7 @@
 
 struct cJSON;
 
-MIST_NAMESPACE
+MistNamespace
 
 void Serialize(cJSON* resource, RectInt* rect);
 void Deserialize(cJSON* resource, RectInt* rect);
@@ -21,5 +21,5 @@ void Deserialize(cJSON* resource, Vec3* vec);
 void Serialize(cJSON* resource, Vec4* vec);
 void Deserialize(cJSON* resource, Vec4* vec);
 
-MIST_NAMESPACE_END
+MistNamespaceEnd
 

@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <cinttypes>
 
-MIST_NAMESPACE
+MistNamespace
 
 __declspec(dllexport) String Create(const char* data)
 {
@@ -141,7 +141,7 @@ __declspec(dllexport) void Reserve(String* string, size_t size)
 	if (result == nullptr)
 	{
 		// Realloc failed to reallocate the block of memory
-		MIST_ASSERT(false);
+		MistAssert(false);
 	}
 	else
 	{
@@ -157,5 +157,5 @@ __declspec(dllexport) const char* ToCStr(String* string)
 	return string->m_StringBuffer != nullptr ? string->m_StringBuffer : "";
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd
 

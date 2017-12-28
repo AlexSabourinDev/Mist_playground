@@ -1,7 +1,7 @@
 #include <Mist_Common\include\UtilityMacros.h>
-#include <Core/Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 void RegisterHandler(SystemEventDispatch* eventHandlers, SystemEventType eventType, SystemEventHandler::Call handler, void* data)
 {
@@ -26,4 +26,4 @@ void DispatchEvent(SystemEventDispatch* eventHandlers, SystemEventType eventType
 	}
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

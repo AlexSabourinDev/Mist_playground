@@ -4,7 +4,7 @@
 #include <Systems\System.h>
 #include <cstdint>
 
-MIST_NAMESPACE
+MistNamespace
 
 enum class SystemEventType
 {
@@ -52,4 +52,4 @@ struct SystemEventDispatch
 void RegisterHandler(SystemEventDispatch* eventHandlers, SystemEventType eventType, SystemEventHandler::Call handler, void* data);
 void DispatchEvent(SystemEventDispatch* eventHandlers, SystemEventType eventType, SystemEventData eventData = nullptr);
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

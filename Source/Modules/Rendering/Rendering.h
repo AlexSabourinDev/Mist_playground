@@ -4,12 +4,14 @@
 
 #include <Systems/System.h>
 
-#include <Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 
 #include <Rendering/Renderer.h>
 
-MIST_NAMESPACE
+MistNamespace
 
+// Interfaces with main, the renderer will select between the correct rendering implementations. 
+// This API should not be used extensively as it is mostly a startup and shutdown API.
 SystemData InitializeRenderer(SystemAllocator allocator);
 void DeinitializeRenderer(SystemDeallocator deallocator, SystemData systemData);
 
@@ -17,4 +19,4 @@ void ProvideRenderingDependencies(SystemData data, SystemEventDispatch* eventHan
 
 Renderer* GetRenderer(SystemData system);
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

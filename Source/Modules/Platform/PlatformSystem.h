@@ -4,7 +4,7 @@
 
 #include <Systems\System.h>
 
-#include <Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 #include <Utility\String.h>
 
 #include <Math\Rect.h>
@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-MIST_NAMESPACE
+MistNamespace
 
 enum class WindowFlags : uint32_t
 {
@@ -38,4 +38,4 @@ void ProvideEventSystem(PlatformSystem* system, SystemEventDispatch* handler);
 // Deserializes the window configuration
 void Deserialize(cJSON* jsonObject, WindowConfig* config);
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

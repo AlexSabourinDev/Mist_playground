@@ -5,7 +5,7 @@
 #include <Math/Rect.h>
 #include <cJson\cJSON.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 void Serialize(cJSON* resource, RectInt* rect)
 {
@@ -69,4 +69,4 @@ void Deserialize(cJSON* resource, Vec4* vec)
 	vec->w = (float)cJSON_GetObjectItem(resource, "w")->valuedouble;
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

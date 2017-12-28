@@ -4,7 +4,7 @@
 
 #include <cstdio>
 
-MIST_NAMESPACE
+MistNamespace
 
 __declspec(dllexport) String ReadFile(const char* filePath)
 {
@@ -21,4 +21,4 @@ __declspec(dllexport) String ReadFile(const char* filePath)
 	return fileString;
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

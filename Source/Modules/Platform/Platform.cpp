@@ -16,7 +16,7 @@
 #include <cstdio>
 #include <cstring>
 
-MIST_NAMESPACE
+MistNamespace
 
 cJSON* LoadConfig(const char* executableDir)
 {
@@ -70,7 +70,7 @@ SystemData InitializePlatform(SystemAllocator allocator, const char* dataPath)
 	cJSON* config = LoadConfig(dataPath);
 
 	if (SDL_Init(LoadSubsystemFlags(config)) != 0) {
-		MIST_ASSERT(false);
+		MistAssert(false);
 	}
 
 	cJSON* windowConfigResource = cJSON_GetObjectItem(config, "WindowConfig");
@@ -93,4 +93,4 @@ void ProvidePlatformDependencies(SystemData data, SystemEventDispatch* eventHand
 	ProvideEventSystem((PlatformSystem*)data, eventHandlers);
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

@@ -2,7 +2,7 @@
 
 #include <Mist_Common\include\UtilityMacros.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 struct Matrix4x4
 {
@@ -21,5 +21,5 @@ inline Matrix4x4 operator*(Matrix4x4 lhs, Matrix4x4 rhs)
 	}
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd
 

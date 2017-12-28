@@ -4,8 +4,8 @@
 
 #include <Utility\String.h>
 
-MIST_NAMESPACE
+MistNamespace
 
 __declspec(dllexport) String ReadFile(const char* file);
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

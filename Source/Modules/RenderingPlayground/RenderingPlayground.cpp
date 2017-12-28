@@ -8,7 +8,7 @@
 #include <Core/Math/Vector.h>
 #include <Core/Math/Serialization.h>
 
-#include <Core/Utility/SystemEventHandler.h>
+#include <Core/Systems/SystemEventHandler.h>
 #include <Core/Utility/String.h>
 #include <Core/Utility/FileIO.h>
 
@@ -16,7 +16,7 @@
 
 #include <cstdlib>
 
-MIST_NAMESPACE
+MistNamespace
 
 cJSON* LoadPipeline(const char* executableDir)
 {
@@ -33,94 +33,47 @@ cJSON* LoadPipeline(const char* executableDir)
 
 struct Playground
 {
-	SystemAllocator m_Allocator;
-	Renderer* m_Renderer;
-	const char* m_DataPath;
-
-	TransformView m_Transforms;
-	Vec3 m_PlaygroundTransform;
+	Renderer* renderer;
+	const char* dataPath;
 };
-
-struct PlaygroundPipelineData
-{
-	Vec4 m_PipelineColor;
-};
-
-struct PlaygroundMaterialData
-{
-	Shader m_Shader;
-};
-
-void PlaygroundPipeline(Renderer* renderer, void* data)
-{
-	PlaygroundPipelineData* pipeline = (PlaygroundPipelineData*)data;
-
-	ClearScreen(renderer, pipeline->m_PipelineColor);
-}
-
-void SetupPlaygroundMaterial(Renderer* renderer, void* data)
-{
-	PlaygroundMaterialData* material = (PlaygroundMaterialData*)data;
-	SetActiveShader(renderer, material->m_Shader);
-}
-
-void ReleasePlaygroundMaterial(Renderer* renderer, SystemDeallocator deallocator, void* data)
-{
-	PlaygroundMaterialData* materialData = (PlaygroundMaterialData*)data; 
-	ReleaseShader(renderer, materialData->m_Shader); 
-	deallocator(data);
-}
 
 SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
 {
 	Playground* playground = (Playground*)data;
 
-	Pipeline playgroundPipeline;
-	playgroundPipeline.m_PipelineRelease = [](Renderer*, SystemDeallocator deallocator, void* data) { deallocator(data); };
-	playgroundPipeline.m_PipelineSetup = PlaygroundPipeline;
-	playgroundPipeline.m_PipelineTeardown = [](Renderer*, void*) {};
-
-	PlaygroundPipelineData* pipelineData = (PlaygroundPipelineData*)playground->m_Allocator(sizeof(PlaygroundPipelineData));
-	playgroundPipeline.m_PipelineData = pipelineData;
-
-	cJSON* pipeline = LoadPipeline(playground->m_DataPath);
-	Deserialize(cJSON_GetObjectItem(pipeline, "Color"), &pipelineData->m_PipelineColor);
-
-	PipelineHandle pipelineHandle = AddPipeline(playground->m_Renderer, playgroundPipeline);
-	cJSON_Delete(pipeline);
-
-	Material playgroundMaterial;
-	playgroundMaterial.m_MaterialRelease = ReleasePlaygroundMaterial;
-	playgroundMaterial.m_MaterialSetup = SetupPlaygroundMaterial;
-	playgroundMaterial.m_MaterialTeardown = [](Renderer* renderer, void*) { ClearActiveShader(renderer);  };
-
-	PlaygroundMaterialData* materialData = (PlaygroundMaterialData*)playground->m_Allocator(sizeof(PlaygroundMaterialData));
-	playgroundMaterial.m_MaterialData = materialData;
-
 	// Read and create the shader
-	String fragDir = Create(playground->m_DataPath);
+	String fragDir = Create(playground->dataPath);
 	Append(&fragDir, "/Rendering/Shaders/Playground.frag");
-	
-	String vertDir = Create(playground->m_DataPath);
+
+	String vertDir = Create(playground->dataPath);
 	Append(&vertDir, "/Rendering/Shaders/Playground.vert");
 
 	String vertShader = ReadFile(ToCStr(&vertDir));
 	String fragShader = ReadFile(ToCStr(&fragDir));
-	materialData->m_Shader = CreateShader(playground->m_Renderer, ToCStr(&vertShader), ToCStr(&fragShader));
+
+	DefaultMaterial playgroundMaterial;
+	playgroundMaterial.type = MaterialType::Default;
+	playgroundMaterial.size = sizeof(DefaultMaterial);
+	playgroundMaterial.shader = AddShader(playground->renderer, ToCStr(&vertShader), ToCStr(&fragShader));
 
 	Clear(&vertShader);
 	Clear(&fragShader);
 	Clear(&fragDir);
 	Clear(&vertDir);
 
-	MaterialHandle materialHandle = AddMaterial(playground->m_Renderer, pipelineHandle, playgroundMaterial);
-
-	playground->m_Transforms.m_Transforms = &playground->m_PlaygroundTransform;
-	playground->m_Transforms.m_ActiveTransforms = 1;
+	MaterialKey materialHandle = AddMaterial(playground->renderer, &playgroundMaterial);
 
 	MeshVertex vertices[] = { { -0.5f, -0.5f, 0.0f }, { 0.5f, -0.5f, 0.0f }, { 0.5f, 0.5f, 0.0f }, { -0.5f, -0.5f, 0.0f }, { 0.5f, 0.5f, 0.0f }, {-0.5, 0.5, 0.0} };
-	Mesh playgroundMesh = CreateMesh(playground->m_Renderer, vertices, 6, &playground->m_Transforms);
-	AddMesh(playground->m_Renderer, pipelineHandle, materialHandle, playgroundMesh);
+	MeshKey playgroundMesh = AddMesh(playground->renderer, vertices, 6);
+
+	return SystemEventResult::Ok;
+}
+
+SystemEventResult RenderPlayground(void* data, SystemEventType, SystemEventData)
+{
+	Playground* playground = (Playground*)data;
+	static Transform t;
+	Submit(playground->renderer, 0, &t, 1);
 
 	return SystemEventResult::Ok;
 }
@@ -128,8 +81,7 @@ SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
 SystemData InitializeRenderingPlayground(SystemAllocator allocator, const char* dataPath)
 {
 	Playground* playground = (Playground*)allocator(sizeof(Playground));
-	playground->m_Allocator = allocator;
-	playground->m_DataPath = dataPath;
+	playground->dataPath = dataPath;
 
 	return playground;
 }
@@ -142,9 +94,10 @@ void DeinitializeRenderingPlayground(SystemDeallocator deallocator, SystemData s
 void ProvideRenderingPlaygroundDependencies(SystemData data, SystemEventDispatch* dispatch, Renderer* renderer)
 {
 	Playground* playground = (Playground*)data;
-	playground->m_Renderer = renderer;
+	playground->renderer = renderer;
 
 	RegisterHandler(dispatch, SystemEventType::Startup, StartPlayground, playground);
+	RegisterHandler(dispatch, SystemEventType::Tick, RenderPlayground, playground);
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

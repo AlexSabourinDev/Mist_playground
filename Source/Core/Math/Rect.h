@@ -2,19 +2,23 @@
 
 #include <Mist_Common\include\UtilityMacros.h>
 
-MIST_NAMESPACE
+MistNamespace
 
-template< typename RectType >
-struct RectTemplate
+struct Rect
 {
-	RectType x;
-	RectType y;
-	RectType width;
-	RectType height;
+	float x;
+	float y;
+	float width;
+	float height;
 };
 
-using Rect = RectTemplate<float>;
-using RectInt = RectTemplate<int>;
+struct RectInt
+{
+	int x;
+	int y;
+	int width;
+	int height;
+};
 
-MIST_NAMESPACE_END
+MistNamespaceEnd
 

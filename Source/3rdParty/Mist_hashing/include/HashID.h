@@ -4,7 +4,7 @@
 #include "Hashing.h"
 #include <cstdint>
 
-MIST_NAMESPACE
+MistNamespace
 
 // Maintains an abstraction between the maintanance of the hash value
 // and the hash generation
@@ -48,4 +48,4 @@ inline constexpr HashID::HashID(const char* name) : m_HashValue(djb2::Hash(name)
 inline HashID::HashID(uint32_t hashValue) : m_HashValue(hashValue) {}
 
 
-MIST_NAMESPACE_END
+MistNamespaceEnd

@@ -3,7 +3,7 @@
 #include <Mist_Common/include/UtilityMacros.h>
 #include <cstdint>
 
-MIST_NAMESPACE
+MistNamespace
 
 
 namespace djb2 {
@@ -49,4 +49,4 @@ namespace CRC32 {
 	}
 }
 
-MIST_NAMESPACE_END
+MistNamespaceEnd
