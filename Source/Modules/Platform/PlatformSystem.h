@@ -23,9 +23,9 @@ enum class WindowFlags : uint32_t
 
 struct WindowConfig
 {
-	String m_WindowName;
-	RectInt m_Rect;
-	WindowFlags m_WindowFlags;
+	String windowName;
+	RectInt rect;
+	WindowFlags windowFlags;
 };
 
 struct PlatformSystem;

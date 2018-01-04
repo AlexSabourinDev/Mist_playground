@@ -33,7 +33,7 @@ String LoadDataPath(const char* executableDir)
 	Append(&jsonPath, "/../Paths.json");
 	String fileContents = ReadFile(ToCStr(&jsonPath));
 
-	cJSON* configData = cJSON_Parse(fileContents.m_StringBuffer);
+	cJSON* configData = cJSON_Parse(fileContents.stringBuffer);
 
 	String path = Create(cJSON_GetObjectItem(configData, "DataPath")->valuestring);
 	cJSON_Delete(configData);

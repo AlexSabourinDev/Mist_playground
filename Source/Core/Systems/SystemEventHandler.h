@@ -30,23 +30,23 @@ struct SystemEventHandler
 {
 	using Call = SystemEventResult(*)(void* data, SystemEventType eventType, SystemEventData eventData);
 
-	static constexpr size_t MAX_SYSTEM_EVENT_HANDLERS = 10;
+	static constexpr size_t MaxSystemEventHandlers = 10;
 
 	struct Handler
 	{
-		Call m_Call;
+		Call call;
 		void* m_Data;
 	};
 
-	Handler m_RegisteredHandlers[MAX_SYSTEM_EVENT_HANDLERS];
-	size_t m_RegisteredCount = 0;
+	Handler registeredHandlers[MaxSystemEventHandlers];
+	size_t registeredCount = 0;
 };
 
 
 struct SystemEventDispatch
 {
-	SystemEventHandler m_Handlers[(size_t)SystemEventType::Max];
-	static constexpr size_t m_Size = (size_t)SystemEventType::Max;
+	SystemEventHandler handlers[(size_t)SystemEventType::Max];
+	static constexpr size_t size = (size_t)SystemEventType::Max;
 };
 
 void RegisterHandler(SystemEventDispatch* eventHandlers, SystemEventType eventType, SystemEventHandler::Call handler, void* data);

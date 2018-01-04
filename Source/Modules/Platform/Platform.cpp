@@ -24,7 +24,7 @@ cJSON* LoadConfig(const char* executableDir)
 	Append(&filePath, "/Config/Platform.json");
 	String fileContents = ReadFile(ToCStr(&filePath));
 
-	cJSON* configData = cJSON_Parse(fileContents.m_StringBuffer);
+	cJSON* configData = cJSON_Parse(fileContents.stringBuffer);
 
 	Clear(&fileContents);
 	Clear(&filePath);

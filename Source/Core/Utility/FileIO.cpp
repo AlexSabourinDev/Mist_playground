@@ -15,7 +15,7 @@ __declspec(dllexport) String ReadFile(const char* filePath)
 
 	String fileString;
 	Reserve(&fileString, fileSize + 1);
-	fread(fileString.m_StringBuffer, fileSize, 1, file);
+	fread(fileString.stringBuffer, fileSize, 1, file);
 	fclose(file);
 
 	return fileString;

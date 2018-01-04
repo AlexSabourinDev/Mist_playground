@@ -5,7 +5,7 @@
 #include <Core/Systems/System.h>
 
 #include <Core/Math/Vector.h>
-#include <Core/Math/Transform.h>
+#include <Core/Math/Quaternion.h>
 
 #include <stdint.h>
 
@@ -33,6 +33,9 @@ ShaderKey AddShader(Renderer* renderer, const char* vertShader, const char* frag
 using CameraKey = uint16_t;
 CameraKey AddCamera(Renderer* renderer);
 
+void SetCameraTransform(Renderer* renderer, CameraKey key, Vec3 position, Quaternion rotation);
+void SetCameraProjection(Renderer* renderer, CameraKey key, float fov, float nearPlane, float farPlane);
+
 
 // -RenderKey-
 // Build a renderkey for the collection of material + mesh that you would like to use for your object. This will allow the renderer
@@ -48,7 +51,7 @@ inline RenderKey BuildRenderKey(CameraKey cameraKey, MaterialKey materialKey, Me
 	return ((RenderKey)cameraKey << 32) | ((RenderKey)materialKey << 16) | ((RenderKey)meshKey & ((1 << 16) - 1));
 }
 // Submit a camera and a renderer submission to be rendered by that camera.
-void Submit(Renderer* renderer, RenderKey renderKey, Transform* transforms, size_t transformCount);
+void Submit(Renderer* renderer, RenderKey renderKey, Mat4* transforms, size_t transformCount);
 
 
 // -Material Structs-

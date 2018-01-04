@@ -21,21 +21,21 @@ SystemEventResult ClearScreen(void* system, SystemEventType, SystemEventData);
 
 struct PlatformSystem
 {
-	WindowConfig m_Config;
-	SystemEventDispatch* m_EventSystem;
-	SDL_Window* m_Window;
+	WindowConfig config;
+	SystemEventDispatch* eventSystem;
+	SDL_Window* window;
 };
 
 void FreeConfig(WindowConfig* config)
 {
-	Clear(&config->m_WindowName);
+	Clear(&config->windowName);
 }
 
 void Deserialize(cJSON* jsonObject, WindowConfig* config)
 {
-	Deserialize(cJSON_GetObjectItem(jsonObject, "Rect"), &config->m_Rect);
+	Deserialize(cJSON_GetObjectItem(jsonObject, "Rect"), &config->rect);
 	
-	config->m_WindowFlags = (WindowFlags)0;
+	config->windowFlags = (WindowFlags)0;
 	cJSON* windowFlags = cJSON_GetObjectItem(jsonObject, "Flags");
 	for (int i = 0; i < cJSON_GetArraySize(windowFlags); i++)
 	{
@@ -43,17 +43,17 @@ void Deserialize(cJSON* jsonObject, WindowConfig* config)
 		if (Equal(flag->valuestring, "Show"))
 		{
 			// This looks pretty gross ;p
-			config->m_WindowFlags = (WindowFlags)((uint32_t)config->m_WindowFlags | (uint32_t)WindowFlags::Show);
+			config->windowFlags = (WindowFlags)((uint32_t)config->windowFlags | (uint32_t)WindowFlags::Show);
 		}
 		else if (Equal(flag->valuestring, "FullScreen"))
 		{
 			// This looks pretty gross ;p
-			config->m_WindowFlags = (WindowFlags)((uint32_t)config->m_WindowFlags | (uint32_t)WindowFlags::FullScreen);
+			config->windowFlags = (WindowFlags)((uint32_t)config->windowFlags | (uint32_t)WindowFlags::FullScreen);
 		}
 		// Add additonal flag values here
 	}
 
-	Set(&config->m_WindowName, cJSON_GetObjectItem(jsonObject, "Name")->valuestring);
+	Set(&config->windowName, cJSON_GetObjectItem(jsonObject, "Name")->valuestring);
 }
 
 Uint32 ConvertWindowFlags(WindowFlags flags)
@@ -89,16 +89,16 @@ void InitializeOpenGL(SDL_Window* window)
 PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig config)
 {
 	PlatformSystem* platform = (PlatformSystem*)allocator(sizeof(PlatformSystem));
-	platform->m_Config = config;
+	platform->config = config;
 
 	if (SDL_WasInit(SDL_INIT_VIDEO))
 	{
-		WindowConfig* config = &platform->m_Config;
-		SDL_Window* window = SDL_CreateWindow(ToCStr(&config->m_WindowName), config->m_Rect.x, config->m_Rect.y,
-			config->m_Rect.width, config->m_Rect.height, ConvertWindowFlags(config->m_WindowFlags));
+		WindowConfig* config = &platform->config;
+		SDL_Window* window = SDL_CreateWindow(ToCStr(&config->windowName), config->rect.x, config->rect.y,
+			config->rect.width, config->rect.height, ConvertWindowFlags(config->windowFlags));
 		MistAssert(window != nullptr);
 
-		platform->m_Window = window;
+		platform->window = window;
 		InitializeOpenGL(window);
 	}
 
@@ -107,14 +107,14 @@ PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig con
 
 void DestroyPlatformSystem(SystemDeallocator deallocator, PlatformSystem* platform)
 {
-	SDL_DestroyWindow(platform->m_Window);
-	FreeConfig(&platform->m_Config);
+	SDL_DestroyWindow(platform->window);
+	FreeConfig(&platform->config);
 	deallocator(platform);
 }
 
 void ProvideEventSystem(PlatformSystem* system, SystemEventDispatch* eventSystem)
 {
-	system->m_EventSystem = eventSystem;
+	system->eventSystem = eventSystem;
 
 	RegisterHandler(eventSystem, SystemEventType::Tick, TickPlatformSystem, system);
 	RegisterHandler(eventSystem, SystemEventType::ClearScreen, ClearScreen, system);
@@ -132,7 +132,7 @@ SystemEventResult TickPlatformSystem(void* system, SystemEventType, SystemEventD
 		switch (event.type)
 		{
 		case SDL_QUIT:
-			DispatchEvent(platform->m_EventSystem, SystemEventType::ShutdownRequest);
+			DispatchEvent(platform->eventSystem, SystemEventType::ShutdownRequest);
 			break;
 		}
 	}
@@ -144,7 +144,7 @@ SystemEventResult TickPlatformSystem(void* system, SystemEventType, SystemEventD
 SystemEventResult ClearScreen(void* system, SystemEventType, SystemEventData)
 {
 	PlatformSystem* platform = (PlatformSystem*)system;
-	SDL_GL_SwapWindow(platform->m_Window);
+	SDL_GL_SwapWindow(platform->window);
 
 	return SystemEventResult::Ok;
 }

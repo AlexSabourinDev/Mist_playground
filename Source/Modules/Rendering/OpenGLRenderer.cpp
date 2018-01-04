@@ -4,12 +4,15 @@
 
 #include <Core/Systems/SystemEventHandler.h>
 
+#include <Core/Math/Matrix.h>
+
 #include <Systems/System.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 
 #define GL3_PROTOTYPES 1
 #include <GL/glew.h>
@@ -42,13 +45,14 @@ void ReleaseShader(Shader shader);
 
 struct Camera
 {
-	// TODO: Add data to the camera structure
+	Mat4 view;
+	Mat4 projection;
 };
 
 struct Submission
 {
 	RenderKey key;
-	Transform* transforms;
+	Mat4* transforms;
 	size_t transformCount;
 };
 
@@ -120,11 +124,37 @@ ShaderKey AddShader(Renderer* renderer, const char* vertShader, const char* frag
 CameraKey AddCamera(Renderer* renderer)
 {
 	MistAssert(renderer->nextCameraIndex < MaxCameraCount);
+	renderer->cameras[renderer->nextCameraIndex].projection = Identity();
+	renderer->cameras[renderer->nextCameraIndex].view = Identity();
+
 	return renderer->nextCameraIndex++;
 }
 
+void SetCameraTransform(Renderer* renderer, CameraKey key, Vec3 position, Quaternion rotation)
+{
+	Mat4 trans = ToMatrix(Conjugate(rotation));
+	trans[0][3] = position.x;
+	trans[1][3] = position.y;
+	trans[2][3] = position.z;
+	renderer->cameras[key].view = trans;
+}
+
+void SetCameraProjection(Renderer* renderer, CameraKey key, float fov, float nearPlane, float farPlane)
+{
+	float s = 1.0f / tan((fov / 2.0f));
+
+	Mat4 proj = Identity();
+	proj[0][0] = s;
+	proj[1][1] = s;
+	proj[2][2] = farPlane / (farPlane - nearPlane);
+	proj[2][3] = (farPlane * nearPlane) / (nearPlane - farPlane);
+	proj[3][2] = 1.0f;
+	proj[3][3] = 0.0f;
+	renderer->cameras[key].projection = proj;
+}
+
 // Submit a camera and a renderer submission to be rendered by that camera.
-void Submit(Renderer* renderer, RenderKey renderKey, Transform* transforms, size_t transformCount)
+void Submit(Renderer* renderer, RenderKey renderKey, Mat4* transforms, size_t transformCount)
 {
 	MistAssert(renderer->nextSubmissionIndex < MaxSubmissionCount);
 	renderer->submissions[renderer->nextSubmissionIndex] = { renderKey, transforms, transformCount };
@@ -301,9 +331,10 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 
 	qsort(renderer->submissions, renderer->nextSubmissionIndex, sizeof(Submission), [](const void* left, const void* right)->int
 	{
-		return ((int64_t)((Submission*)left)->key) - ((int64_t)((Submission*)right)->key);
+		return (int)(((int64_t)((Submission*)left)->key) - ((int64_t)((Submission*)right)->key));
 	});
 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (size_t i = 0; i < renderer->nextSubmissionIndex; ++i)
 	{
 		CameraKey cameraKey = (CameraKey)(renderer->submissions[i].key >> 32);
@@ -311,15 +342,16 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 		MeshKey meshKey = (MeshKey)(renderer->submissions[i].key);
 
 		// Find the camera
-		Camera* camera = &renderer->cameras[cameraKey];
-		// TODO: Add camera functionality
+		Mat4 vp = renderer->cameras[cameraKey].projection * renderer->cameras[cameraKey].view;
 
 		EnableMaterial(renderer, &renderer->materialBuffer[materialKey]);
+
+		glUniformMatrix4fv(0, 1, GL_FALSE, (float*)&vp);
 		glBindVertexArray(renderer->meshes[meshKey].meshPipeline);
 
 		for (size_t transformIndex = 0; transformIndex < renderer->submissions[i].transformCount; transformIndex++)
 		{
-			// TODO: Bind the current transform
+			glUniformMatrix4fv(1, 1, GL_FALSE, (float*)&renderer->submissions[i].transforms[transformIndex]);
 			glDrawArrays(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount);
 		}
 
@@ -346,6 +378,10 @@ Renderer* CreateRenderer(SystemAllocator allocator)
 	glewExperimental = GL_TRUE;
 	glewInit();
 #endif
+
+	glEnable(GL_DEPTH_TEST);
+	glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);
 
 	Renderer* renderer = (Renderer*)allocator(sizeof(Renderer));
 	memset(renderer, 0, sizeof(Renderer));

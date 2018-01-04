@@ -7,8 +7,8 @@ MistNamespace
 // -String-
 struct String
 {
-	char* m_StringBuffer = nullptr;
-	size_t m_Capacity = 0;
+	char* stringBuffer = nullptr;
+	size_t capacity = 0;
 };
 
 // -API-
