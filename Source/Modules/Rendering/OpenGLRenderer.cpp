@@ -133,9 +133,9 @@ CameraKey AddCamera(Renderer* renderer)
 void SetCameraTransform(Renderer* renderer, CameraKey key, Vec3 position, Quaternion rotation)
 {
 	Mat4 trans = ToMatrix(Conjugate(rotation));
-	trans[0][3] = position.x;
-	trans[1][3] = position.y;
-	trans[2][3] = position.z;
+	trans[0][3] = -position.x;
+	trans[1][3] = -position.y;
+	trans[2][3] = -position.z;
 	renderer->cameras[key].view = trans;
 }
 

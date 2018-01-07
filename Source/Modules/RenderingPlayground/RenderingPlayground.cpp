@@ -81,7 +81,7 @@ SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
 	free(vertices);
 
 	CameraKey camera = AddCamera(playground->renderer);
-	SetCameraTransform(playground->renderer, camera, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 1.0f });
+	SetCameraTransform(playground->renderer, camera, { 0.0f, 0.0f, -500.0f }, { 0.0f, 0.0f, 0.0f, 1.0f });
 	SetCameraProjection(playground->renderer, camera, 3.1415f / 2.0f, 0.1f, 1000.0f);
 
 	return SystemEventResult::Ok;
@@ -90,9 +90,8 @@ SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
 SystemEventResult RenderPlayground(void* data, SystemEventType, SystemEventData)
 {
 	Playground* playground = (Playground*)data;
-	static Mat4 t;
+	static Mat4 t = Identity();
 	t = ToMatrix(AxisAngle({ 0.0f, 1.0f, 0.0f }, (float)clock() / CLOCKS_PER_SEC));
-	t[2][3] = 500.0f;
 
 	Submit(playground->renderer, 0, &t, 1);
 

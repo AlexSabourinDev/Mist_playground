@@ -45,6 +45,11 @@ inline float Dot(Vec3 lhs, Vec3 rhs)
 	return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
 }
 
+inline Vec3 operator-(Vec3 vec)
+{
+	return { -vec.x, -vec.y, -vec.z };
+}
+
 
 struct Vec4
 {
