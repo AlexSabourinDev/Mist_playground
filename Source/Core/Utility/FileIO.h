@@ -4,8 +4,14 @@
 
 #include <Utility\String.h>
 
+#include <cstdint>
+
 MistNamespace
 
-__declspec(dllexport) String ReadFile(const char* file);
+String ReadFile(const char* file);
+
+// Binary operations
+void ReadFile(const char* file, uint8_t** data, size_t* dataSize);
+void WriteFile(const char* file, uint8_t* data, size_t dataSize);
 
 MistNamespaceEnd

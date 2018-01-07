@@ -383,6 +383,8 @@ Renderer* CreateRenderer(SystemAllocator allocator)
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 
+	glEnable(GL_MULTISAMPLE);
+
 	Renderer* renderer = (Renderer*)allocator(sizeof(Renderer));
 	memset(renderer, 0, sizeof(Renderer));
 	return renderer;

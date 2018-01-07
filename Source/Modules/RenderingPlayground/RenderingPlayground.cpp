@@ -32,6 +32,16 @@ cJSON* LoadPipeline(const char* executableDir)
 	return configData;
 }
 
+void LoadMesh(const char* executableDir, const char* meshName, MeshVertex** vertices, size_t* dataSize)
+{
+	String filePath = Create(executableDir);
+	Append(&filePath, "/Rendering/Meshes/");
+	Append(&filePath, meshName);
+	ReadFile(ToCStr(&filePath), (uint8_t**)vertices, dataSize);
+
+	*dataSize = *dataSize / sizeof(MeshVertex);
+}
+
 struct Playground
 {
 	Renderer* renderer;
@@ -64,18 +74,15 @@ SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
 
 	MaterialKey materialHandle = AddMaterial(playground->renderer, &playgroundMaterial);
 
-	const float s = 0.25f;
-	MeshVertex vertices[] = { { -s, -s, -s }, { s, -s, -s }, { s, s, -s }, { -s, -s, -s }, { s, s, -s }, {-s, s, -s},
-								{ s, -s, -s },{ s, s, -s },{ s, s, s },{ s, -s, -s },{ s, s, s },{ s, -s, s },
-								{ -s, -s, -s },{ -s, s, -s },{ -s, s, s },{ -s, -s, -s },{ -s, s, s },{ -s, -s, s },
-								{ -s, -s, s },{ s, -s, s },{ s, s, s },{ -s, -s, s },{ s, s, s },{ -s, s, s },
-								{ -s, s, -s },{ s, s, -s },{ s, s, s },{ -s, s, -s },{ s, s, s },{ -s, s, s },
-								{ -s, -s, -s },{ s, -s, -s },{ s, -s, s },{ -s, -s, -s },{ s, -s, s },{ -s, -s, s } };
-	MeshKey playgroundMesh = AddMesh(playground->renderer, vertices, 36);
+	MeshVertex* vertices;
+	size_t vertexCount;
+	LoadMesh(playground->dataPath, "Sphere.bin", &vertices, &vertexCount);
+	MeshKey playgroundMesh = AddMesh(playground->renderer, vertices, vertexCount);
+	free(vertices);
 
 	CameraKey camera = AddCamera(playground->renderer);
 	SetCameraTransform(playground->renderer, camera, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 1.0f });
-	SetCameraProjection(playground->renderer, camera, 3.1415f / 2.0f, 0.1f, 10.0f);
+	SetCameraProjection(playground->renderer, camera, 3.1415f / 2.0f, 0.1f, 1000.0f);
 
 	return SystemEventResult::Ok;
 }
@@ -84,8 +91,9 @@ SystemEventResult RenderPlayground(void* data, SystemEventType, SystemEventData)
 {
 	Playground* playground = (Playground*)data;
 	static Mat4 t;
-	t = ToMatrix(AxisAngle({ 0.707f, 0.707f, 0.0f }, (float)clock() / CLOCKS_PER_SEC));
-	t[2][3] = 1.0f;
+	t = ToMatrix(AxisAngle({ 0.0f, 1.0f, 0.0f }, (float)clock() / CLOCKS_PER_SEC));
+	t[2][3] = 500.0f;
+
 	Submit(playground->renderer, 0, &t, 1);
 
 	return SystemEventResult::Ok;

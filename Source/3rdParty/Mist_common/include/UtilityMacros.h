@@ -25,3 +25,4 @@ namespace MistNamespaceName {
 // Define the assertion method for assertions
 #include <cassert>
 #define MistAssert(condition) do { if(condition == false) { DebugBreak(); } } while(false)
+#define MistUnused(data) (void)data;

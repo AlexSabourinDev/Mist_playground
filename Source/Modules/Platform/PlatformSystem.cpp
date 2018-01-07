@@ -93,6 +93,9 @@ PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig con
 
 	if (SDL_WasInit(SDL_INIT_VIDEO))
 	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
 		WindowConfig* config = &platform->config;
 		SDL_Window* window = SDL_CreateWindow(ToCStr(&config->windowName), config->rect.x, config->rect.y,
 			config->rect.width, config->rect.height, ConvertWindowFlags(config->windowFlags));

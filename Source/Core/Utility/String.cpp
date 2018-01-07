@@ -8,14 +8,14 @@
 
 MistNamespace
 
-__declspec(dllexport) String Create(const char* data)
+String Create(const char* data)
 {
 	String str;
 	Set(&str, data);
 	return str;
 }
 
-__declspec(dllexport) void Append(String* string, const char* appendage)
+void Append(String* string, const char* appendage)
 {
 	// Create a new buffer of this string's size + the other string's size
 	size_t newSize = string->stringBuffer != nullptr ? strlen(string->stringBuffer) + strlen(appendage) : strlen(appendage);
@@ -26,12 +26,12 @@ __declspec(dllexport) void Append(String* string, const char* appendage)
 
 	strcat(string->stringBuffer, appendage);
 }
-__declspec(dllexport) void Append(String* left, String* right)
+void Append(String* left, String* right)
 {
 	Append(left, right->stringBuffer);
 }
 
-__declspec(dllexport) void Set(String* string, const char* data)
+void Set(String* string, const char* data)
 {
 	size_t requestedSize = strlen(data);
 	if (string->stringBuffer == nullptr || strlen(string->stringBuffer) < requestedSize)
@@ -42,7 +42,7 @@ __declspec(dllexport) void Set(String* string, const char* data)
 	strcpy(string->stringBuffer, data);
 }
 
-__declspec(dllexport) void Clear(String* string)
+void Clear(String* string)
 {
 	if (string->stringBuffer == nullptr)
 	{
@@ -58,30 +58,30 @@ __declspec(dllexport) void Clear(String* string)
 	string->stringBuffer = nullptr;
 }
 
-__declspec(dllexport) bool IsEmpty(const String* string)
+bool IsEmpty(const String* string)
 {
 	return string->stringBuffer == nullptr || strlen(string->stringBuffer) == 0;
 }
 
-__declspec(dllexport) bool Equal(const String* left, const String* right)
+bool Equal(const String* left, const String* right)
 {
 	return Equal(left, right->stringBuffer);
 }
-__declspec(dllexport) bool Equal(const String* left, const char* right)
+bool Equal(const String* left, const char* right)
 {
 	return left->stringBuffer != nullptr && strcmp(left->stringBuffer, right) == 0;
 }
 
-__declspec(dllexport) bool Equal(const char* left, const char* right)
+bool Equal(const char* left, const char* right)
 {
 	return strcmp(left, right) == 0;
 }
 
-__declspec(dllexport) void Replace(String* string, const String* target, const String* replaceValue)
+void Replace(String* string, const String* target, const String* replaceValue)
 {
 	Replace(string, target->stringBuffer, replaceValue->stringBuffer);
 }
-__declspec(dllexport) void Replace(String* string, const char* target, const char* replaceValue)
+void Replace(String* string, const char* target, const char* replaceValue)
 {
 	if (string->stringBuffer == nullptr)
 	{
@@ -119,16 +119,16 @@ __declspec(dllexport) void Replace(String* string, const char* target, const cha
 	}
 }
 
-__declspec(dllexport) bool Contains(String* target, const String* findTarget)
+bool Contains(String* target, const String* findTarget)
 {
 	return Contains(target, findTarget->stringBuffer);
 }
-__declspec(dllexport) bool Contains(String* target, const char* findTarget)
+bool Contains(String* target, const char* findTarget)
 {
 	return target->stringBuffer != nullptr && strstr(target->stringBuffer, findTarget) != nullptr;
 }
 
-__declspec(dllexport) void Reserve(String* string, size_t size)
+void Reserve(String* string, size_t size)
 {
 	if (string->capacity >= size || size == 0)
 	{
@@ -152,7 +152,7 @@ __declspec(dllexport) void Reserve(String* string, size_t size)
 	}
 }
 
-__declspec(dllexport) const char* ToCStr(String* string)
+const char* ToCStr(String* string)
 {
 	return string->stringBuffer != nullptr ? string->stringBuffer : "";
 }

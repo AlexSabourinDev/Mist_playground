@@ -6,7 +6,9 @@ set( MIST_INCLUDE_DIRS
 	 ${CMAKE_SOURCE_DIR}
 	 ${CMAKE_SOURCE_DIR}/Core
 	 ${CMAKE_SOURCE_DIR}/Modules
-	 ${CMAKE_SOURCE_DIR}/3rdParty)
+	 ${CMAKE_SOURCE_DIR}/3rdParty
+	 ${CMAKE_SOURCE_DIR}/Tools
+	 ${CMAKE_SOURCE_DIR}/3rdParty/assimp/include)
 	 
 set( MIST_OUTPUT_DIRECTORY 
 	 ${CMAKE_BINARY_DIR}/../../Output )
@@ -30,4 +32,5 @@ project( All )
 add_subdirectory( 3rdParty )
 add_subdirectory( Core )
 add_subdirectory( Modules )
+add_subdirectory( Tools )
 add_subdirectory( Game )

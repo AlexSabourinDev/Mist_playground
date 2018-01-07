@@ -12,30 +12,30 @@ struct String
 };
 
 // -API-
-__declspec(dllexport) String Create(const char* data);
+ String Create(const char* data);
 
-__declspec(dllexport) void Append(String* string, const char* appendage);
-__declspec(dllexport) void Append(String* left, String* right);
+void Append(String* string, const char* appendage);
+void Append(String* left, String* right);
 
-__declspec(dllexport) void Set(String* string, const char* data);
+void Set(String* string, const char* data);
 
-__declspec(dllexport) void Clear(String* string);
+void Clear(String* string);
 
-__declspec(dllexport) bool IsEmpty(const String* string);
+bool IsEmpty(const String* string);
 
-__declspec(dllexport) bool Equal(const String* left, const String* right);
-__declspec(dllexport) bool Equal(const String* left, const char* right);
-__declspec(dllexport) bool Equal(const char* left, const char* right);
+bool Equal(const String* left, const String* right);
+bool Equal(const String* left, const char* right);
+bool Equal(const char* left, const char* right);
 
-__declspec(dllexport) void Replace(String* string, const String* target, const String* replaceValue);
-__declspec(dllexport) void Replace(String* string, const char* target, const char* replaceValue);
+void Replace(String* string, const String* target, const String* replaceValue);
+void Replace(String* string, const char* target, const char* replaceValue);
 
-__declspec(dllexport) bool Contains(String* target, const String* findTarget);
-__declspec(dllexport) bool Contains(String* target, const char* findTarget);
+bool Contains(String* target, const String* findTarget);
+bool Contains(String* target, const char* findTarget);
 
-__declspec(dllexport) void Reserve(String* string, size_t size);
+void Reserve(String* string, size_t size);
 
-__declspec(dllexport) const char* ToCStr(String* string);
+const char* ToCStr(String* string);
 
 
 MistNamespaceEnd
