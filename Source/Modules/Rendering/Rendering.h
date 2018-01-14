@@ -13,7 +13,7 @@ MistNamespace
 // Interfaces with main, the renderer will select between the correct rendering implementations. 
 // This API should not be used extensively as it is mostly a startup and shutdown API.
 SystemData InitializeRenderer(SystemAllocator allocator);
-void DeinitializeRenderer(SystemDeallocator deallocator, SystemData systemData);
+void DeinitializeRenderer(SystemAllocator deallocator, SystemData systemData);
 
 void ProvideRenderingDependencies(SystemData data, SystemEventDispatch* eventHandler);
 

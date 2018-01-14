@@ -10,7 +10,7 @@
 MistNamespace
 
 SystemData InitializeRenderingPlayground(SystemAllocator allocator, const char* dataPath);
-void DeinitializeRenderingPlayground(SystemDeallocator deallocator, SystemData systemData);
+void DeinitializeRenderingPlayground(SystemAllocator deallocator, SystemData systemData);
 
 void ProvideRenderingPlaygroundDependencies(SystemData data, SystemEventDispatch* dispatch, Renderer* renderer);
 

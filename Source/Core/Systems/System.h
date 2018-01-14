@@ -6,7 +6,15 @@ MistNamespace
 
 using SystemData = void*;
 
-using SystemAllocator = void*(*)(size_t size);
-using SystemDeallocator = void(*)(void* data);
+struct SystemAllocator
+{
+	using Allocator = void*(*)(void* allocator, size_t size);
+	using Deallocator = void(*)(void* allocator, void* data);
+
+	Allocator allocate;
+	Deallocator deallocate;
+
+	void* allocatorData;
+};
 
 MistNamespaceEnd

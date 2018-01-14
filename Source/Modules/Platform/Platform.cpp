@@ -82,7 +82,7 @@ SystemData InitializePlatform(SystemAllocator allocator, const char* dataPath)
 	return CreatePlatformSystem(allocator, windowConfig);
 }
 
-void DeinitializePlatform(SystemDeallocator deallocator, SystemData data)
+void DeinitializePlatform(SystemAllocator deallocator, SystemData data)
 {
 	DestroyPlatformSystem(deallocator, (PlatformSystem*)data);
 	SDL_Quit();

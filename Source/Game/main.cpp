@@ -48,16 +48,50 @@ String LoadDataPath(const char* executableDir)
 	return filePath;
 }
 
+constexpr size_t AllocationSize = 1024 * 5;
+struct StackAllocator
+{
+	uint8_t data[AllocationSize];
+	size_t nextAllocationLocation;
+};
+
+SystemAllocator Create(StackAllocator* stackAllocator)
+{
+	SystemAllocator allocator;
+	allocator.allocatorData = stackAllocator;
+	allocator.allocate = [](void* allocatorData, size_t allocationSize)->void*
+	{
+		StackAllocator* allocator = (StackAllocator*)allocatorData;
+		if (allocator->nextAllocationLocation + allocationSize > AllocationSize)
+		{
+			MistAssert(false);
+			return nullptr;
+		}
+		void* allocationLocation = &allocator->data[allocator->nextAllocationLocation];
+		allocator->nextAllocationLocation += allocationSize;
+		return allocationLocation;
+	};
+	// We don't do anything in deallocation, systems are deallocated at program termination
+	allocator.deallocate = [](void* allocatorData, void* data) {};
+	return allocator;
+}
+
 int main(int argc, char *argv[])
 {
 	String dataPath = LoadDataPath(argv[0]);
 
+	// Allocator
+	StackAllocator stackAllocator;
+	stackAllocator.nextAllocationLocation = 0;
+
+	SystemAllocator systemAllocator = Create(&stackAllocator);
+
 	SystemEventDispatch systemEvents;
 
 	Print("Initializing systems");
-	SystemData platformData = InitializePlatform(malloc, ToCStr(&dataPath));
-	SystemData rendererData = InitializeRenderer(malloc);
-	SystemData renderingPlayground = InitializeRenderingPlayground(malloc, ToCStr(&dataPath));
+	SystemData platformData = InitializePlatform(systemAllocator, ToCStr(&dataPath));
+	SystemData rendererData = InitializeRenderer(systemAllocator);
+	SystemData renderingPlayground = InitializeRenderingPlayground(systemAllocator, ToCStr(&dataPath));
 
 	ProvidePlatformDependencies(platformData, &systemEvents);
 	ProvideRenderingDependencies(rendererData, &systemEvents);
@@ -88,9 +122,9 @@ int main(int argc, char *argv[])
 
 
 	Print("Deinitializing systems");
-	DeinitializeRenderingPlayground(free, renderingPlayground);
-	DeinitializeRenderer(free, rendererData);
-	DeinitializePlatform(free, platformData);
+	DeinitializeRenderingPlayground(systemAllocator, renderingPlayground);
+	DeinitializeRenderer(systemAllocator, rendererData);
+	DeinitializePlatform(systemAllocator, platformData);
 
 	Clear(&dataPath);
 

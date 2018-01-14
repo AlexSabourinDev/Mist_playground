@@ -12,7 +12,7 @@ struct String
 };
 
 // -API-
- String Create(const char* data);
+String Create(const char* data);
 
 void Append(String* string, const char* appendage);
 void Append(String* left, String* right);

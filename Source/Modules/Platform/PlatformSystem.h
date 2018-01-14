@@ -31,7 +31,7 @@ struct WindowConfig
 struct PlatformSystem;
 
 PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig config);
-void DestroyPlatformSystem(SystemDeallocator deallocator, PlatformSystem* platformSystem);
+void DestroyPlatformSystem(SystemAllocator allocator, PlatformSystem* platformSystem);
 
 void ProvideEventSystem(PlatformSystem* system, SystemEventDispatch* handler);
 

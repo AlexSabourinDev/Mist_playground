@@ -88,7 +88,7 @@ void InitializeOpenGL(SDL_Window* window)
 
 PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig config)
 {
-	PlatformSystem* platform = (PlatformSystem*)allocator(sizeof(PlatformSystem));
+	PlatformSystem* platform = (PlatformSystem*)allocator.allocate(allocator.allocatorData, sizeof(PlatformSystem));
 	platform->config = config;
 
 	if (SDL_WasInit(SDL_INIT_VIDEO))
@@ -108,11 +108,11 @@ PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig con
 	return platform;
 }
 
-void DestroyPlatformSystem(SystemDeallocator deallocator, PlatformSystem* platform)
+void DestroyPlatformSystem(SystemAllocator allocator, PlatformSystem* platform)
 {
 	SDL_DestroyWindow(platform->window);
 	FreeConfig(&platform->config);
-	deallocator(platform);
+	allocator.deallocate(allocator.allocatorData, platform);
 }
 
 void ProvideEventSystem(PlatformSystem* system, SystemEventDispatch* eventSystem)

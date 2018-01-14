@@ -2,13 +2,16 @@
 
 out vec4 outFragColor;
 
-in vec4 interpWorldPos;
-in vec4 interpLocalPos;
+in vec4 interpNorm;
+in vec2 interpUV;
 
 void main()
 {
-	vec3 lightPos = vec3(-200.0, 100.0, -300.0);
-	vec3 lightDir = normalize(lightPos - interpWorldPos.xyz);
+	vec3 lightDir = vec3(0.707, 0.707, 0.0);
 	
-	outFragColor = normalize(interpLocalPos) * max(dot(lightDir, normalize(interpWorldPos.xyz)), 0.3);
+	vec2 repeat = mod(interpUV, vec2(0.05)) / 0.05;
+	vec2 grid = smoothstep(vec2(0.02), vec2(0.05), 1.0 - abs(repeat - vec2(0.5)) / 0.5);
+	float amount = max(grid.x * grid.y, 0.3);
+	
+	outFragColor = vec4(vec3(amount), 1.0) * max(dot(lightDir, normalize(interpNorm.xyz)), 0.3);
 }

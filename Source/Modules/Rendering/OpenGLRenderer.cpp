@@ -30,7 +30,8 @@ struct Mesh
 	unsigned int meshPipeline;
 	unsigned int vertexCount;
 };
-Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount);
+Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount, MeshType meshType);
+void ModifyMesh(unsigned int mesh, MeshVertex* vertices, size_t vertexCount, MeshType meshType);
 void ReleaseMesh(Mesh mesh);
 
 // -Shaders-
@@ -64,11 +65,11 @@ struct MaterialData
 
 // -Renderer-
 
-const uint16_t MaxMeshCount = 256;
-const uint16_t MaxShaderCount = 256;
-const uint16_t MaxCameraCount = 8;
-const uint16_t MaxSubmissionCount = 10;
-const uint16_t MaterialBufferSize = 1024;
+constexpr uint8_t MaxMeshCount = 64;
+constexpr uint8_t MaxShaderCount = 64;
+constexpr uint8_t MaxCameraCount = 8;
+constexpr uint8_t MaxSubmissionCount = 16;
+constexpr uint16_t MaterialBufferSize = 1024;
 struct Renderer
 {
 	SystemEventDispatch* eventSystem;
@@ -107,11 +108,17 @@ MaterialKey AddMaterial(Renderer* renderer, void* material)
 	return previousMaterialKey;
 }
 
-MeshKey AddMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount)
+MeshKey AddMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount, MeshType meshType)
 {
 	MistAssert(renderer->nextMeshIndex < MaxMeshCount);
-	renderer->meshes[renderer->nextMeshIndex] = CreateMesh(vertices, vertexCount);
+	renderer->meshes[renderer->nextMeshIndex] = CreateMesh(vertices, vertexCount, meshType);
 	return renderer->nextMeshIndex++;
+}
+
+void ModifyMesh(Renderer* renderer, MeshKey key, MeshVertex* vertices, size_t vertexCount, MeshType meshType)
+{
+	MistAssert(renderer->nextMeshIndex > key);
+	ModifyMesh(renderer->meshes[key].meshHandle, vertices, vertexCount, meshType);
 }
 
 ShaderKey AddShader(Renderer* renderer, const char* vertShader, const char* fragShader)
@@ -162,7 +169,7 @@ void Submit(Renderer* renderer, RenderKey renderKey, Mat4* transforms, size_t tr
 }
 
 // -Mesh Implementation-
-Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount)
+Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount, MeshType meshType)
 {
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -175,16 +182,33 @@ Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount)
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-	// TODO: Add Dynamic and stream setup
-	glBufferData(GL_ARRAY_BUFFER, sizeof(MeshVertex) * vertexCount, vertices, GL_STATIC_DRAW);
+	GLenum glType;
+	switch (meshType)
+	{
+	case MeshType::Static:
+		glType = GL_STATIC_DRAW;
+		break;
+	case MeshType::Dynamic:
+		glType = GL_DYNAMIC_DRAW;
+		break;
+	case MeshType::Stream:
+		glType = GL_STREAM_DRAW;
+		break;
+	}
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MeshVertex) * vertexCount, vertices, glType);
 
 	// Position, needs to be set to 0
-	// Last param is actually offset, use was changed later on (Pretty gross)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
 
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void*)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
 	Mesh mesh;
@@ -193,6 +217,26 @@ Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount)
 	mesh.vertexCount = vertexCount;
 
 	return mesh;
+}
+
+void ModifyMesh(unsigned int mesh, MeshVertex* vertices, size_t vertexCount, MeshType meshType)
+{
+	MistAssert(meshType != MeshType::Static);
+
+	GLenum glType;
+	switch (meshType)
+	{
+	case MeshType::Dynamic:
+		glType = GL_DYNAMIC_DRAW;
+		break;
+	case MeshType::Stream:
+		glType = GL_STREAM_DRAW;
+		break;
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MeshVertex) * vertexCount, vertices, glType);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ReleaseMesh(Mesh mesh)
@@ -337,8 +381,8 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (size_t i = 0; i < renderer->nextSubmissionIndex; ++i)
 	{
-		CameraKey cameraKey = (CameraKey)(renderer->submissions[i].key >> 32);
-		MaterialKey materialKey = (MaterialKey)(renderer->submissions[i].key >> 16);
+		CameraKey cameraKey = (CameraKey)(renderer->submissions[i].key >> 24);
+		MaterialKey materialKey = (MaterialKey)(renderer->submissions[i].key >> 8);
 		MeshKey meshKey = (MeshKey)(renderer->submissions[i].key);
 
 		// Find the camera
@@ -382,15 +426,16 @@ Renderer* CreateRenderer(SystemAllocator allocator)
 	glEnable(GL_DEPTH_TEST);
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
 
 	glEnable(GL_MULTISAMPLE);
 
-	Renderer* renderer = (Renderer*)allocator(sizeof(Renderer));
+	Renderer* renderer = (Renderer*)allocator.allocate(allocator.allocatorData, sizeof(Renderer));
 	memset(renderer, 0, sizeof(Renderer));
 	return renderer;
 }
 
-void DestroyRenderer(SystemDeallocator deallocator, Renderer* renderer)
+void DestroyRenderer(SystemAllocator allocator, Renderer* renderer)
 {
 	for (size_t i = 0; i < renderer->nextMeshIndex; i++)
 	{
@@ -401,7 +446,7 @@ void DestroyRenderer(SystemDeallocator deallocator, Renderer* renderer)
 	{
 		ReleaseShader(renderer->shaders[i]);
 	}
-	deallocator(renderer);
+	allocator.deallocate(allocator.allocatorData, renderer);
 }
 
 MistNamespaceEnd
