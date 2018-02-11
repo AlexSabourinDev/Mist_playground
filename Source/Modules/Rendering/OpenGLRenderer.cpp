@@ -354,6 +354,8 @@ void EnableMaterial(Renderer* renderer, void* materialData)
 	case MaterialType::Default:
 		DefaultMaterial* defaultMaterial = (DefaultMaterial*)materialData;
 		glUseProgram(renderer->shaders[defaultMaterial->shader].shaderHandle);
+
+		glUniform4fv(4, 1, &defaultMaterial->color.x);
 		break;
 	}
 }

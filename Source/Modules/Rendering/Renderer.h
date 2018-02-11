@@ -90,6 +90,7 @@ struct DefaultMaterial
 {
 	MistMaterialData;
 	ShaderKey shader;
+	Vec4 color;
 };
 
 MistNamespaceEnd
