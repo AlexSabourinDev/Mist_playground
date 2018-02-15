@@ -165,7 +165,6 @@ int main(int argc, char *argv[])
 
 	String flush = Create(mist_ProfilePreface);
 	char* print = Mist_Flush();
-	Append(&flush, ",");
 	Append(&flush, print);
 	free(print);
 	Append(&flush, mist_ProfilePostface);
