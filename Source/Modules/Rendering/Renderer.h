@@ -11,6 +11,8 @@
 
 MistNamespace
 
+#define MIST_HINT_SORT_RENDER_SUBMISSIONS 1
+
 struct Renderer;
 
 // -Meshes-

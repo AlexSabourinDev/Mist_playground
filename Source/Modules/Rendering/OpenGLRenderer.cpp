@@ -1,5 +1,7 @@
 #include <Mist_Common\include\UtilityMacros.h>
 
+#include <Mist_Profiler\Mist_Profiler.h>
+
 #include <Rendering\Renderer.h>
 
 #include <Core/Systems/SystemEventHandler.h>
@@ -65,11 +67,11 @@ struct MaterialData
 
 // -Renderer-
 
-constexpr uint8_t MaxMeshCount = 64;
-constexpr uint8_t MaxShaderCount = 64;
+constexpr uint8_t MaxMeshCount = 255;
+constexpr uint16_t MaxShaderCount = 10000;
 constexpr uint8_t MaxCameraCount = 8;
-constexpr uint8_t MaxSubmissionCount = 16;
-constexpr uint16_t MaterialBufferSize = 1024;
+constexpr uint8_t MaxSubmissionCount = 255;
+constexpr uint16_t MaterialBufferSize = 1024 * 50;
 struct Renderer
 {
 	SystemEventDispatch* eventSystem;
@@ -373,27 +375,42 @@ void DisableMaterial(Renderer* renderer, void* materialData)
 
 SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 {
+	MIST_BEGIN_PROFILE("Mist::Renderer", "RenderTick");
 	Renderer* renderer = (Renderer*)system;
 
+
+#if MIST_HINT_SORT_RENDER_SUBMISSIONS
+	MIST_BEGIN_PROFILE("Mist::Renderer", "Sort");
 	qsort(renderer->submissions, renderer->nextSubmissionIndex, sizeof(Submission), [](const void* left, const void* right)->int
 	{
 		return (int)(((int64_t)((Submission*)left)->key) - ((int64_t)((Submission*)right)->key));
 	});
+	MIST_END_PROFILE("Mist::Renderer", "Sort");
+#endif // MIST_HINT_SORT_RENDER_SUBMISSIONS
 
+	MIST_BEGIN_PROFILE("Mist::Renderer", "RenderingMeshes");
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	MaterialKey previousMaterialKey = (~(uint16_t)0);
+	MeshKey previousMeshKey = (~(uint8_t)0);
 	for (size_t i = 0; i < renderer->nextSubmissionIndex; ++i)
 	{
 		CameraKey cameraKey = (CameraKey)(renderer->submissions[i].key >> 24);
 		MaterialKey materialKey = (MaterialKey)(renderer->submissions[i].key >> 8);
 		MeshKey meshKey = (MeshKey)(renderer->submissions[i].key);
 
-		// Find the camera
+		if (previousMaterialKey != materialKey)
+		{
+			EnableMaterial(renderer, &renderer->materialBuffer[materialKey]);
+		}
+
 		Mat4 vp = renderer->cameras[cameraKey].projection * renderer->cameras[cameraKey].view;
-
-		EnableMaterial(renderer, &renderer->materialBuffer[materialKey]);
-
 		glUniformMatrix4fv(0, 1, GL_FALSE, (float*)&vp);
-		glBindVertexArray(renderer->meshes[meshKey].meshPipeline);
+
+		if (previousMeshKey != meshKey)
+		{
+			glBindVertexArray(renderer->meshes[meshKey].meshPipeline);
+		}
 
 		for (size_t transformIndex = 0; transformIndex < renderer->submissions[i].transformCount; transformIndex++)
 		{
@@ -401,13 +418,27 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 			glDrawArrays(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount);
 		}
 
-		glBindVertexArray(0);
-		DisableMaterial(renderer, &renderer->materialBuffer[materialKey]);
+		if (previousMeshKey != meshKey)
+		{
+			glBindVertexArray(0);
+			previousMeshKey = meshKey;
+		}
+
+		if (previousMaterialKey != materialKey)
+		{
+			DisableMaterial(renderer, &renderer->materialBuffer[materialKey]);
+			previousMaterialKey = materialKey;
+		}
 	}
+	MIST_END_PROFILE("Mist::Renderer", "RenderingMeshes");
 
 	renderer->nextSubmissionIndex = 0;
 
+	MIST_BEGIN_PROFILE("Mist::Renderer", "Clear Screen");
 	DispatchEvent(renderer->eventSystem, SystemEventType::ClearScreen);
+	MIST_END_PROFILE("Mist::Renderer", "Clear Screen");
+
+	MIST_END_PROFILE("Mist::Renderer", "RenderTick");
 	return SystemEventResult::Ok;
 }
 

@@ -9,6 +9,7 @@
 MistNamespace
 
 String ReadFile(const char* file);
+void WriteFile(const char* file, String* string);
 
 // Binary operations
 void ReadFile(const char* file, uint8_t** data, size_t* dataSize);

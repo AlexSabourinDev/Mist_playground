@@ -44,4 +44,12 @@ void WriteFile(const char* filePath, uint8_t* data, size_t dataSize)
 	fclose(file);
 }
 
+void WriteFile(const char* filePath, String* string)
+{
+	FILE* file = fopen(filePath, "w");
+	fprintf(file, "%s", ToCStr(string));
+
+	fclose(file);
+}
+
 MistNamespaceEnd
