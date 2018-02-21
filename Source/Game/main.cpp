@@ -49,7 +49,7 @@ String LoadDataPath(const char* executableDir)
 	return filePath;
 }
 
-constexpr size_t AllocationSize = 1024 * 1000;
+constexpr size_t AllocationSize = 1024 * 100000;
 struct StackAllocator
 {
 	uint8_t data[AllocationSize];

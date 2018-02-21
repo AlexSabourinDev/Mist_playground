@@ -32,7 +32,7 @@ struct Mesh
 	unsigned int meshPipeline;
 	unsigned int vertexCount;
 };
-Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount, MeshType meshType);
+Mesh CreateMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount, MeshType meshType);
 void ModifyMesh(unsigned int mesh, MeshVertex* vertices, size_t vertexCount, MeshType meshType);
 void ReleaseMesh(Mesh mesh);
 
@@ -91,6 +91,8 @@ struct Renderer
 
 	Submission submissions[MaxSubmissionCount];
 	uint16_t nextSubmissionIndex;
+
+	unsigned int instancingBuffer;
 };
 
 
@@ -113,7 +115,7 @@ MaterialKey AddMaterial(Renderer* renderer, void* material)
 MeshKey AddMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount, MeshType meshType)
 {
 	MistAssert(renderer->nextMeshIndex < MaxMeshCount);
-	renderer->meshes[renderer->nextMeshIndex] = CreateMesh(vertices, vertexCount, meshType);
+	renderer->meshes[renderer->nextMeshIndex] = CreateMesh(renderer, vertices, vertexCount, meshType);
 	return renderer->nextMeshIndex++;
 }
 
@@ -171,7 +173,7 @@ void Submit(Renderer* renderer, RenderKey renderKey, Mat4* transforms, size_t tr
 }
 
 // -Mesh Implementation-
-Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount, MeshType meshType)
+Mesh CreateMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount, MeshType meshType)
 {
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -210,7 +212,26 @@ Mesh CreateMesh(MeshVertex* vertices, size_t vertexCount, MeshType meshType)
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void*)(sizeof(float) * 6));
 	glEnableVertexAttribArray(2);
 
+	glBindBuffer(GL_ARRAY_BUFFER, renderer->instancingBuffer);
+
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), 0);
+	glVertexAttribDivisor(3, 1);
+	glEnableVertexAttribArray(3);
+
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), (void*)(sizeof(Mat4::MatLine)));
+	glVertexAttribDivisor(4, 1);
+	glEnableVertexAttribArray(4);
+
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), (void*)(sizeof(Mat4::MatLine) * 2));
+	glVertexAttribDivisor(5, 1);
+	glEnableVertexAttribArray(5);
+
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), (void*)(sizeof(Mat4::MatLine) * 3));
+	glVertexAttribDivisor(6, 1);
+	glEnableVertexAttribArray(6);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	glBindVertexArray(0);
 
 	Mesh mesh;
@@ -378,7 +399,6 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 	MIST_BEGIN_PROFILE("Mist::Renderer", "RenderTick");
 	Renderer* renderer = (Renderer*)system;
 
-
 #if MIST_HINT_SORT_RENDER_SUBMISSIONS
 	MIST_BEGIN_PROFILE("Mist::Renderer", "Sort");
 	qsort(renderer->submissions, renderer->nextSubmissionIndex, sizeof(Submission), [](const void* left, const void* right)->int
@@ -401,7 +421,10 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 
 		if (previousMaterialKey != materialKey)
 		{
+			DisableMaterial(renderer, &renderer->materialBuffer[previousMaterialKey]);
 			EnableMaterial(renderer, &renderer->materialBuffer[materialKey]);
+
+			previousMaterialKey = materialKey;
 		}
 
 		Mat4 vp = renderer->cameras[cameraKey].projection * renderer->cameras[cameraKey].view;
@@ -410,26 +433,20 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 		if (previousMeshKey != meshKey)
 		{
 			glBindVertexArray(renderer->meshes[meshKey].meshPipeline);
-		}
-
-		for (size_t transformIndex = 0; transformIndex < renderer->submissions[i].transformCount; transformIndex++)
-		{
-			glUniformMatrix4fv(1, 1, GL_FALSE, (float*)&renderer->submissions[i].transforms[transformIndex]);
-			glDrawArrays(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount);
-		}
-
-		if (previousMeshKey != meshKey)
-		{
-			glBindVertexArray(0);
 			previousMeshKey = meshKey;
 		}
 
-		if (previousMaterialKey != materialKey)
-		{
-			DisableMaterial(renderer, &renderer->materialBuffer[materialKey]);
-			previousMaterialKey = materialKey;
-		}
+		glBindBuffer(GL_ARRAY_BUFFER, renderer->instancingBuffer);
+
+		MIST_BEGIN_PROFILE("Mist::Renderer", "glBufferData");
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Mat4) * renderer->submissions[i].transformCount, renderer->submissions[i].transforms, GL_DYNAMIC_DRAW);
+		MIST_END_PROFILE("Mist::Renderer", "glBufferData");
+
+		glDrawArraysInstanced(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount, renderer->submissions[i].transformCount);
 	}
+	DisableMaterial(renderer, &renderer->materialBuffer[previousMaterialKey]);
+	glBindVertexArray(0);
+
 	MIST_END_PROFILE("Mist::Renderer", "RenderingMeshes");
 
 	renderer->nextSubmissionIndex = 0;
@@ -465,6 +482,9 @@ Renderer* CreateRenderer(SystemAllocator allocator)
 
 	Renderer* renderer = (Renderer*)allocator.allocate(allocator.allocatorData, sizeof(Renderer));
 	memset(renderer, 0, sizeof(Renderer));
+
+	glGenBuffers(1, &renderer->instancingBuffer);
+
 	return renderer;
 }
 
@@ -479,6 +499,8 @@ void DestroyRenderer(SystemAllocator allocator, Renderer* renderer)
 	{
 		ReleaseShader(renderer->shaders[i]);
 	}
+	glDeleteBuffers(1, &renderer->instancingBuffer);
+
 	allocator.deallocate(allocator.allocatorData, renderer);
 }
 

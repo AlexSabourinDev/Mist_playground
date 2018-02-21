@@ -47,9 +47,7 @@ void LoadMesh(const char* executableDir, const char* meshName, MeshVertex** vert
 	Clear(&filePath);
 }
 
-constexpr int RevolvingMeshCount = 10000;
-constexpr int MaterialGranularityCount = 5;
-constexpr int TransformGranularityCount = 100;
+constexpr int SquareCount = 1000000;
 
 struct Playground
 {
@@ -57,10 +55,10 @@ struct Playground
 	const char* dataPath;
 
 	RenderKey renderKey;
-	RenderKey revolutionKey[RevolvingMeshCount / TransformGranularityCount];
+	RenderKey squareKey;
 
 	Mat4 renderTransforms[4];
-	Mat4 revolutionTransform[RevolvingMeshCount];
+	Mat4 squareTransforms[SquareCount];
 };
 
 SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
@@ -91,49 +89,22 @@ SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
 
 	MaterialKey materialHandle = AddMaterial(playground->renderer, &playgroundMaterial);
 
-	MaterialKey materialKeys[RevolvingMeshCount / MaterialGranularityCount];
-	for (int i = 0; i < RevolvingMeshCount / MaterialGranularityCount; i++)
-	{
-		DefaultMaterial shapeMaterial;
-		shapeMaterial.type = MaterialType::Default;
-		shapeMaterial.size = sizeof(DefaultMaterial);
-		shapeMaterial.shader = AddShader(playground->renderer, ToCStr(&vertShader), ToCStr(&fragShader));
-		shapeMaterial.color = { 1.0f, 0.0f, 0.0f, 1.0f };
-
-		materialKeys[i] = AddMaterial(playground->renderer, &shapeMaterial);
-	}
-
 	Clear(&vertShader);
 	Clear(&fragShader);
 	Clear(&fragDir);
 	Clear(&vertDir);
 
-	for (int i = 0; i < RevolvingMeshCount / TransformGranularityCount; i++)
-	{
-		constexpr int stepCount = 1000;
-		constexpr float stepSize = 5.0f / stepCount;
-		constexpr int vertCount = 6 * stepCount;
+	constexpr float Width = 1.0f;
+	MeshVertex square[6];
+	square[0] = { { -Width, -Width, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } };
+	square[1] = { {  Width, -Width, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } };
+	square[2] = { {  Width,  Width, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 1.0f } };
+	square[3] = { { -Width, -Width, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } };
+	square[4] = { {  Width,  Width, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 1.0f } };
+	square[5] = { { -Width,  Width, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f } };
 
-		MeshVertex revolution[vertCount];
-		for (int i = 0; i < vertCount; i += 6)
-		{
-			float x = stepSize * (i / 6);
-			float y = x * x;
-
-			float nx = stepSize * (i / 6 + 1);
-			float ny = nx * nx;
-
-			revolution[i] = { { -x, y, 0.0f },{ 0.0f, 0.0f, 1.0f },{ -x / 50.0f, y / 50.0f } };
-			revolution[i + 1] = { { x, y, 0.0f },{ 0.0f, 0.0f, 1.0f },{ x / 50.0f, y / 50.0f } };
-			revolution[i + 2] = { { nx, ny, 0.0f },{ 0.0f, 0.0f, 1.0f },{ nx / 50.0f, ny / 50.0f } };
-			revolution[i + 3] = { { -x, y, 0.0f },{ 0.0f, 0.0f, 1.0f },{ -x / 50.0f, y / 50.0f } };
-			revolution[i + 4] = { { nx, ny, 0.0f },{ 0.0f, 0.0f, 1.0f },{ nx / 50.0f, ny / 50.0f } };
-			revolution[i + 5] = { { -nx, ny, 0.0f },{ 0.0f, 0.0f, 1.0f },{ -nx / 50.0f, ny / 50.0f } };
-		}
-
-		MeshKey revolutionKey = AddMesh(playground->renderer, revolution, vertCount);
-		playground->revolutionKey[i] = BuildRenderKey(camera, materialKeys[i * TransformGranularityCount / MaterialGranularityCount], revolutionKey);
-	}
+	MeshKey squareMesh = AddMesh(playground->renderer, square, 6);
+	playground->squareKey = BuildRenderKey(camera, materialHandle, squareMesh);
 
 	MeshVertex floor[VertexCount(2, 2)];
 	GenPlane({ 2, 2 }, { 100.0f, 100.0f }, floor, VertexCount(2, 2));
@@ -149,28 +120,24 @@ SystemEventResult RenderPlayground(void* data, SystemEventType, SystemEventData)
 {
 	Playground* playground = (Playground*)data;
 
-	for (int i = 0; i < RevolvingMeshCount; i++)
-	{
-		float speedup = 1.0f + ((float)i / RevolvingMeshCount);
-		playground->revolutionTransform[i] = ToMatrix(AxisAngle({ 0.0f, 1.0f, 0.0f }, (float)clock() / CLOCKS_PER_SEC * speedup));
-		playground->revolutionTransform[i][2][3] = 20.0f;
-		playground->revolutionTransform[i][1][3] = 20.0f;
-	}
+	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "Tick");
 
-	bool randomizers[RevolvingMeshCount / TransformGranularityCount] = {};
-	for (int i = 0; i < RevolvingMeshCount / TransformGranularityCount; i++)
-	{
-		int randomIndex = 0;
-		do
-		{
-			randomIndex = rand() % (RevolvingMeshCount / TransformGranularityCount);
-		} while (randomizers[randomIndex]);
-		randomizers[randomIndex] = true;
+	float step = 1.0f / SquareCount;
+	float time = (float)clock() / CLOCKS_PER_SEC * step;
 
-		Submit(playground->renderer, playground->revolutionKey[randomIndex], &playground->revolutionTransform[randomIndex * TransformGranularityCount], TransformGranularityCount);
+	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "Tick-TransformLoop");
+	for (int i = 0; i < SquareCount; i++)
+	{
+		playground->squareTransforms[i] = Identity();
+		playground->squareTransforms[i][2][3] = step * i + 10.0f;
+		playground->squareTransforms[i][1][3] = step * i + 10.0f + time;
+		playground->squareTransforms[i][0][3] = step * i;
 	}
+	MIST_END_PROFILE("Mist::Rendering Playground", "Tick-TransformLoop");
 
 	Submit(playground->renderer, playground->renderKey, playground->renderTransforms, 4);
+	Submit(playground->renderer, playground->squareKey, playground->squareTransforms, SquareCount);
+	MIST_END_PROFILE("Mist::Rendering Playground", "Tick");
 
 	return SystemEventResult::Ok;
 }
@@ -193,11 +160,6 @@ SystemData InitializeRenderingPlayground(SystemAllocator allocator, const char* 
 	playground->renderTransforms[3] = ToMatrix(AxisAngle({ 1.0f, 0.0f, 0.0f }, -3.1415f / 2.0f));
 	playground->renderTransforms[3][2][3] = 50.0f;
 	playground->renderTransforms[3][1][3] = 50.0f;
-
-	for (int i = 0; i < RevolvingMeshCount; i++)
-	{
-		playground->revolutionTransform[i] = Identity();
-	}
 
 	return playground;
 }
