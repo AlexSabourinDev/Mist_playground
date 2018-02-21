@@ -55,7 +55,7 @@ struct Camera
 struct Submission
 {
 	RenderKey key;
-	Mat4* transforms;
+	Transform* transforms;
 	size_t transformCount;
 };
 
@@ -165,7 +165,7 @@ void SetCameraProjection(Renderer* renderer, CameraKey key, float fov, float nea
 }
 
 // Submit a camera and a renderer submission to be rendered by that camera.
-void Submit(Renderer* renderer, RenderKey renderKey, Mat4* transforms, size_t transformCount)
+void Submit(Renderer* renderer, RenderKey renderKey, Transform* transforms, size_t transformCount)
 {
 	MistAssert(renderer->nextSubmissionIndex < MaxSubmissionCount);
 	renderer->submissions[renderer->nextSubmissionIndex] = { renderKey, transforms, transformCount };
@@ -214,21 +214,13 @@ Mesh CreateMesh(Renderer* renderer, MeshVertex* vertices, size_t vertexCount, Me
 
 	glBindBuffer(GL_ARRAY_BUFFER, renderer->instancingBuffer);
 
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), 0);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Transform), 0);
 	glVertexAttribDivisor(3, 1);
 	glEnableVertexAttribArray(3);
 
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), (void*)(sizeof(Mat4::MatLine)));
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Transform), (void*)(sizeof(Vec3)));
 	glVertexAttribDivisor(4, 1);
 	glEnableVertexAttribArray(4);
-
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), (void*)(sizeof(Mat4::MatLine) * 2));
-	glVertexAttribDivisor(5, 1);
-	glEnableVertexAttribArray(5);
-
-	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Mat4), (void*)(sizeof(Mat4::MatLine) * 3));
-	glVertexAttribDivisor(6, 1);
-	glEnableVertexAttribArray(6);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -439,7 +431,7 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 		glBindBuffer(GL_ARRAY_BUFFER, renderer->instancingBuffer);
 
 		MIST_BEGIN_PROFILE("Mist::Renderer", "glBufferData");
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Mat4) * renderer->submissions[i].transformCount, renderer->submissions[i].transforms, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Transform) * renderer->submissions[i].transformCount, renderer->submissions[i].transforms, GL_DYNAMIC_DRAW);
 		MIST_END_PROFILE("Mist::Renderer", "glBufferData");
 
 		glDrawArraysInstanced(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount, renderer->submissions[i].transformCount);

@@ -79,9 +79,14 @@ inline Quaternion operator*(Quaternion lhs, Quaternion rhs)
 
 inline Vec3 operator*(Quaternion lhs, Vec3 rhs)
 {
-	Quaternion v = { rhs.x, rhs.y, rhs.z, 0.0f };
-	Quaternion r = Conjugate(lhs) * v * lhs;
-	return { r.x, r.y, r.z };
+	Vec3 q = { lhs.x, lhs.y, lhs.z };
+	Vec3 t = 2.0f * Cross(q, rhs);
+	return rhs + lhs.w * t + Cross(q, t);
+}
+
+inline Quaternion IdentityQuat()
+{
+	return { 0.0f, 0.0f, 0.0f, 1.0f };
 }
 
 MistNamespaceEnd

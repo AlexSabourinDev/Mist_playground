@@ -57,8 +57,8 @@ struct Playground
 	RenderKey renderKey;
 	RenderKey squareKey;
 
-	Mat4 renderTransforms[4];
-	Mat4 squareTransforms[SquareCount];
+	Transform renderTransforms[4];
+	Transform squareTransforms[SquareCount];
 };
 
 SystemEventResult StartPlayground(void* data, SystemEventType, SystemEventData)
@@ -128,10 +128,8 @@ SystemEventResult RenderPlayground(void* data, SystemEventType, SystemEventData)
 	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "Tick-TransformLoop");
 	for (int i = 0; i < SquareCount; i++)
 	{
-		playground->squareTransforms[i] = Identity();
-		playground->squareTransforms[i][2][3] = step * i + 10.0f;
-		playground->squareTransforms[i][1][3] = step * i + 10.0f + time;
-		playground->squareTransforms[i][0][3] = step * i;
+		playground->squareTransforms[i].rotation = IdentityQuat();
+		playground->squareTransforms[i].position = { step * i, step * i + 10.0f + time, step * i + 10.0f };
 	}
 	MIST_END_PROFILE("Mist::Rendering Playground", "Tick-TransformLoop");
 
@@ -147,19 +145,17 @@ SystemData InitializeRenderingPlayground(SystemAllocator allocator, const char* 
 	Playground* playground = (Playground*)allocator.allocate(allocator.allocatorData, sizeof(Playground));
 	playground->dataPath = dataPath;
 	
-	playground->renderTransforms[0] = Identity();
+	playground->renderTransforms[0].rotation = IdentityQuat();
+	playground->renderTransforms[0].position = {0.0f, 0.0f, 0.0f};
 
-	playground->renderTransforms[1] = ToMatrix(AxisAngle({ 0.0f, 0.0f, 1.0f }, 3.1415f / 2.0f));
-	playground->renderTransforms[1][0][3] = 50.0f;
-	playground->renderTransforms[1][1][3] = 50.0f;
+	playground->renderTransforms[1].rotation = AxisAngle({ 0.0f, 0.0f, 1.0f }, 3.1415f / 2.0f);
+	playground->renderTransforms[1].position = { 50.0f, 50.0f, 0.0f };
 
-	playground->renderTransforms[2] = ToMatrix(AxisAngle({ 0.0f, 0.0f, 1.0f }, -3.1415f / 2.0f));
-	playground->renderTransforms[2][0][3] = -50.0f;
-	playground->renderTransforms[2][1][3] = 50.0f;
+	playground->renderTransforms[2].rotation = AxisAngle({ 0.0f, 0.0f, 1.0f }, -3.1415f / 2.0f);
+	playground->renderTransforms[2].position = { -50.0f, 50.0f, 0.0f };
 
-	playground->renderTransforms[3] = ToMatrix(AxisAngle({ 1.0f, 0.0f, 0.0f }, -3.1415f / 2.0f));
-	playground->renderTransforms[3][2][3] = 50.0f;
-	playground->renderTransforms[3][1][3] = 50.0f;
+	playground->renderTransforms[3].rotation = AxisAngle({ 1.0f, 0.0f, 0.0f }, -3.1415f / 2.0f);
+	playground->renderTransforms[3].position = { 0.0f, 50.0f, 50.0f };
 
 	return playground;
 }

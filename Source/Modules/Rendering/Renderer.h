@@ -69,8 +69,14 @@ inline MeshKey GetMesh(RenderKey renderKey) { return (MeshKey)renderKey; }
 inline MaterialKey GetMaterial(RenderKey renderKey) { return (MaterialKey)(renderKey >> 8); }
 inline CameraKey GetCamera(RenderKey renderKey) { return (CameraKey)(renderKey >> 24); }
 
+struct Transform
+{
+	Vec3 position;
+	Quaternion rotation;
+};
+
 // Submit a camera and a renderer submission to be rendered by that camera.
-void Submit(Renderer* renderer, RenderKey renderKey, Mat4* transforms, size_t transformCount);
+void Submit(Renderer* renderer, RenderKey renderKey, Transform* transforms, size_t transformCount);
 
 
 // -Material Structs-

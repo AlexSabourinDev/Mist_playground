@@ -12,7 +12,7 @@ MistNamespace
 
 constexpr size_t VertexCount(size_t width, size_t height)
 {
-	return (width + 1) * (height + 1) * 6;
+	return width * height * 6;
 }
 
 void GenPlane(Vec2Int dimensions, Vec2 size, MeshVertex* vertices, size_t bufferSize);

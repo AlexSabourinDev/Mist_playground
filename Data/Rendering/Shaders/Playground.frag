@@ -4,7 +4,7 @@ layout (location = 4) uniform vec4 color;
 
 out vec4 outFragColor;
 
-in vec4 interpNorm;
+in vec3 interpNorm;
 in vec2 interpUV;
 
 void main()
@@ -15,5 +15,5 @@ void main()
 	vec2 grid = smoothstep(vec2(0.02), vec2(0.05), 1.0 - abs(repeat - vec2(0.5)) / 0.5);
 	float amount = max(grid.x * grid.y, 0.3);
 	
-	outFragColor = color * amount * max(dot(lightDir, normalize(interpNorm.xyz)), 0.3);
+	outFragColor = color * amount * max(dot(lightDir, normalize(interpNorm)), 0.3);
 }
