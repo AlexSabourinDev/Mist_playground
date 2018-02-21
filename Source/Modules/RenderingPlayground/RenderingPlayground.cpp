@@ -120,22 +120,22 @@ SystemEventResult RenderPlayground(void* data, SystemEventType, SystemEventData)
 {
 	Playground* playground = (Playground*)data;
 
-	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "Tick");
+	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "TickRenderer");
 
 	float step = 1.0f / SquareCount;
 	float time = (float)clock() / CLOCKS_PER_SEC * step;
 
-	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "Tick-TransformLoop");
+	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "TransformLoop");
 	for (int i = 0; i < SquareCount; i++)
 	{
 		playground->squareTransforms[i].rotation = IdentityQuat();
 		playground->squareTransforms[i].position = { step * i, step * i + 10.0f + time, step * i + 10.0f };
 	}
-	MIST_END_PROFILE("Mist::Rendering Playground", "Tick-TransformLoop");
+	MIST_END_PROFILE("Mist::Rendering Playground", "TransformLoop");
 
 	Submit(playground->renderer, playground->renderKey, playground->renderTransforms, 4);
 	Submit(playground->renderer, playground->squareKey, playground->squareTransforms, SquareCount);
-	MIST_END_PROFILE("Mist::Rendering Playground", "Tick");
+	MIST_END_PROFILE("Mist::Rendering Playground", "TickRenderer");
 
 	return SystemEventResult::Ok;
 }
