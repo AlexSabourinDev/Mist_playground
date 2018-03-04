@@ -95,6 +95,7 @@ PlatformSystem* CreatePlatformSystem(SystemAllocator allocator, WindowConfig con
 	{
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+		SDL_GL_SetSwapInterval(0);
 
 		WindowConfig* config = &platform->config;
 		SDL_Window* window = SDL_CreateWindow(ToCStr(&config->windowName), config->rect.x, config->rect.y,

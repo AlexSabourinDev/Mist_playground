@@ -47,7 +47,7 @@ void LoadMesh(const char* executableDir, const char* meshName, MeshVertex** vert
 	Clear(&filePath);
 }
 
-constexpr int SquareCount = 1000000;
+constexpr int SquareCount = 500000;
 
 struct Playground
 {
@@ -123,7 +123,7 @@ SystemEventResult RenderPlayground(void* data, SystemEventType, SystemEventData)
 	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "TickRenderer");
 
 	float step = 1.0f / SquareCount;
-	float time = (float)clock() / CLOCKS_PER_SEC * step;
+	float time = (float)clock() / CLOCKS_PER_SEC * 0.1f;
 
 	MIST_BEGIN_PROFILE("Mist::Rendering Playground", "TransformLoop");
 	for (int i = 0; i < SquareCount; i++)

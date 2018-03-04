@@ -67,6 +67,11 @@ struct MaterialData
 
 // -Renderer-
 
+constexpr uint32_t InstanceCount = 1001000;
+constexpr uint32_t SingleBuffer = InstanceCount * sizeof(Transform);
+constexpr uint8_t BufferCount = 3;
+constexpr uint32_t BufferSize = SingleBuffer * BufferCount;
+
 constexpr uint8_t MaxMeshCount = 255;
 constexpr uint16_t MaxShaderCount = 10000;
 constexpr uint8_t MaxCameraCount = 8;
@@ -93,6 +98,10 @@ struct Renderer
 	uint16_t nextSubmissionIndex;
 
 	unsigned int instancingBuffer;
+	void* instancingMemory;
+	GLsync locks[3];
+
+	unsigned int activeBuffer = 0;
 };
 
 
@@ -405,6 +414,29 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 
 	MaterialKey previousMaterialKey = (~(uint16_t)0);
 	MeshKey previousMeshKey = (~(uint8_t)0);
+
+	uint32_t currentOffset = 0;
+
+	MIST_BEGIN_PROFILE("Mist::Renderer", "Wait");
+	GLbitfield waitFlags = 0;
+	GLuint64 waitDuration = 0;
+	while (1 && renderer->locks[renderer->activeBuffer]) {
+		GLenum waitRet = glClientWaitSync(renderer->locks[renderer->activeBuffer], waitFlags, waitDuration);
+		if (waitRet == GL_ALREADY_SIGNALED || waitRet == GL_CONDITION_SATISFIED) {
+			break;
+		}
+
+		if (waitRet == GL_WAIT_FAILED) {
+			assert(!"Not sure what to do here. Probably raise an exception or something.");
+			return SystemEventResult::Error;
+		}
+
+		// After the first time, need to start flushing, and wait for a looong time.
+		waitFlags = GL_SYNC_FLUSH_COMMANDS_BIT;
+		waitDuration = 1000000000;
+	}
+	MIST_END_PROFILE("Mist::Renderer", "Wait");
+
 	for (size_t i = 0; i < renderer->nextSubmissionIndex; ++i)
 	{
 		CameraKey cameraKey = (CameraKey)(renderer->submissions[i].key >> 24);
@@ -428,14 +460,30 @@ SystemEventResult TickRenderer(void* system, SystemEventType, SystemData)
 			previousMeshKey = meshKey;
 		}
 
-		glBindBuffer(GL_ARRAY_BUFFER, renderer->instancingBuffer);
+		uint32_t bufferOffset = SingleBuffer * renderer->activeBuffer + currentOffset;
 
-		MIST_BEGIN_PROFILE("Mist::Renderer", "glBufferData");
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Transform) * renderer->submissions[i].transformCount, renderer->submissions[i].transforms, GL_DYNAMIC_DRAW);
-		MIST_END_PROFILE("Mist::Renderer", "glBufferData");
+		MIST_BEGIN_PROFILE("Mist::Renderer", "Buffer Data");
+		memcpy((uint8_t*)renderer->instancingMemory + bufferOffset, renderer->submissions[i].transforms, sizeof(Transform) * renderer->submissions[i].transformCount);
+		MIST_END_PROFILE("Mist::Renderer", "Buffer Data");
 
-		glDrawArraysInstanced(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount, renderer->submissions[i].transformCount);
+		MIST_BEGIN_PROFILE("Mist::Renderer", "Draw");
+		glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, renderer->meshes[meshKey].vertexCount, renderer->submissions[i].transformCount, InstanceCount * renderer->activeBuffer + currentOffset / sizeof(Transform));
+		MIST_END_PROFILE("Mist::Renderer", "Draw");
+		currentOffset += sizeof(Transform) * renderer->submissions[i].transformCount;
 	}
+
+	MIST_BEGIN_PROFILE("Mist::Renderer", "Sync");
+	if (renderer->locks[renderer->activeBuffer])
+	{
+		glDeleteSync(renderer->locks[renderer->activeBuffer]);
+	}
+	MIST_BEGIN_PROFILE("Mist::Renderer", "Create Fence");
+	renderer->locks[renderer->activeBuffer] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+	MIST_END_PROFILE("Mist::Renderer", "Create Fence");
+
+	renderer->activeBuffer = (renderer->activeBuffer + 1) % BufferCount;
+	MIST_END_PROFILE("Mist::Renderer", "Sync");
+
 	DisableMaterial(renderer, &renderer->materialBuffer[previousMaterialKey]);
 	glBindVertexArray(0);
 
@@ -476,6 +524,11 @@ Renderer* CreateRenderer(SystemAllocator allocator)
 	memset(renderer, 0, sizeof(Renderer));
 
 	glGenBuffers(1, &renderer->instancingBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, renderer->instancingBuffer);
+
+	const GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+	glBufferStorage(GL_ARRAY_BUFFER, BufferSize, nullptr, flags);
+	renderer->instancingMemory = glMapBufferRange(GL_ARRAY_BUFFER, 0, BufferSize, flags);
 
 	return renderer;
 }
